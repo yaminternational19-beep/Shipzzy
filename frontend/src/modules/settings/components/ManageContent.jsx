@@ -105,8 +105,8 @@ const ManageContent = ({ onShowToast }) => {
 
     return (
         <div className="settings-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '20px' }}>
-                <div className="tab-group-pills" style={{ margin: 0, flexWrap: 'wrap', width: '100%', maxWidth: 'calc(100% - 150px)', minWidth: '300px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                <div className="tab-group-pills" style={{ margin: 0, flexWrap: 'wrap', width: 'fit-content', maxWidth: 'calc(100% - 160px)' }}>
                     {sections.map(section => {
                         const Icon = section.icon;
                         return (
