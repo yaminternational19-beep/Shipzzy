@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 const createProductSchema = Joi.object({
   name: Joi.string().required(),
@@ -6,6 +6,4 @@ const createProductSchema = Joi.object({
   description: Joi.string().optional()
 });
 
-module.exports = {
-  createProductSchema
-};
+export { createProductSchema };

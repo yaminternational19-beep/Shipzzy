@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 const schema = Joi.object({
   PORT: Joi.number().default(5000),
@@ -11,4 +11,4 @@ if (error) {
   throw new Error(`Environment validation error: ${error.message}`);
 }
 
-module.exports = value;
+export default value;

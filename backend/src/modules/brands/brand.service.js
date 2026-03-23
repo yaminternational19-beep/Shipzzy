@@ -1,7 +1,7 @@
 
-const db = require("../../config/db");
-const s3Service = require("../../services/s3Service");
-const { getPagination, getPaginationMeta } = require("../../utils/pagination");
+import db from '../../config/db.js';
+import s3Service from '../../services/s3Service.js';
+import { getPagination, getPaginationMeta } from '../../utils/pagination.js';
 
 const createBrand = async (data, file) => {
 
@@ -245,7 +245,7 @@ const deleteBrand = async (id) => {
   return { id };
 };
 
-module.exports = {
+export default {
     createBrand,
     getBrands,
     updateBrand,

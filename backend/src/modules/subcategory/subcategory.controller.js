@@ -1,11 +1,11 @@
-const ApiResponse = require("../../utils/apiResponse");
-const service = require("./subcategory.service");
+import ApiResponse from '../../utils/apiResponse.js';
+import service from './subcategory.service.js';
 
 /* ===============================
    CREATE SUBCATEGORY
 ================================= */
 
-exports.createSubCategory = async (req, res) => {
+export const createSubCategory = async (req, res) => {
   try {
 
     const subCategory = await service.createSubCategory(
@@ -34,7 +34,7 @@ exports.createSubCategory = async (req, res) => {
    GET SUBCATEGORIES
 ================================= */
 
-exports.getSubCategories = async (req, res) => {
+export const getSubCategories = async (req, res) => {
   try {
 
     const result = await service.getSubCategories(req.query);
@@ -60,7 +60,7 @@ exports.getSubCategories = async (req, res) => {
    UPDATE SUBCATEGORY
 ================================= */
 
-exports.updateSubCategory = async (req, res) => {
+export const updateSubCategory = async (req, res) => {
   try {
 
     const subCategory = await service.updateSubCategory(
@@ -90,7 +90,7 @@ exports.updateSubCategory = async (req, res) => {
    DELETE SUBCATEGORY
 ================================= */
 
-exports.deleteSubCategory = async (req, res) => {
+export const deleteSubCategory = async (req, res) => {
   try {
 
     const deleted = await service.deleteSubCategory(req.params.id);
@@ -116,7 +116,7 @@ exports.deleteSubCategory = async (req, res) => {
    TOGGLE SUBCATEGORY STATUS
 ================================= */
 
-exports.toggleStatus = async (req, res) => {
+export const toggleStatus = async (req, res) => {
   try {
 
     const data = await service.toggleStatus(
@@ -139,3 +139,5 @@ exports.toggleStatus = async (req, res) => {
 
   }
 };
+
+export default { createSubCategory, getSubCategories, updateSubCategory, deleteSubCategory, toggleStatus };

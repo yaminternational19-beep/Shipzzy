@@ -1,0 +1,23 @@
+ CREATE TABLE IF NOT EXISTS tiers (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                tier_key VARCHAR(50),             
+                tier_name VARCHAR(50) NOT NULL,   
+                tier_order INT DEFAULT 0,                
+                threshold_text VARCHAR(100),            
+                min_turnover DECIMAL(10,2) DEFAULT 0,
+                commission_percent DECIMAL(5,2) DEFAULT 0,
+                payment_cycle VARCHAR(50),
+                priority_listing BOOLEAN DEFAULT FALSE,      
+                color_code VARCHAR(20),           
+                badge_color VARCHAR(20),          
+                features JSON,                              
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_tier_key (tier_key),
+                INDEX idx_min_turnover (min_turnover),
+                INDEX idx_is_active (is_active),
+                INDEX idx_active_turnover (is_active, min_turnover),
+                INDEX idx_tier_order (tier_order)
+            );
+           

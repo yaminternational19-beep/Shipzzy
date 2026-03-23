@@ -24,7 +24,7 @@ import { SettingsPage } from '../modules/settings';
 //vendor routes
 import VendorProductPage from '../modules/vendor_products/VendorProductsPage';
 import VendorOrdersPage from '../modules/vendor_orders/VendorOrdersPage';
-import HelpSupport from '../modules/vendor_settings/HelpSupport';
+import { VendorSettingsPage } from '../modules/vendor_settings';
 
 // Simple ProtectedRoute component
 const ProtectedRoute = ({ children, allowedRoles = ["ALL"] }) => {
@@ -261,12 +261,35 @@ const GlobalRoutes = () => {
             />
 
             <Route
-                path="/vendor/help-support"
+                path="/vendor/help-support/raise-query"
                 element={
                     <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "VENDOR_OWNER"]}>
-                        <HelpSupport />
+                        <VendorSettingsPage activeTab="raise-query" />
                     </ProtectedRoute>
                 }
+            />
+
+            <Route
+                path="/vendor/help-support/history"
+                element={
+                    <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "VENDOR_OWNER"]}>
+                        <VendorSettingsPage activeTab="history" />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/vendor/help-support/faq"
+                element={
+                    <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "VENDOR_OWNER"]}>
+                        <VendorSettingsPage activeTab="faq" />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/vendor/help-support"
+                element={<Navigate to="/vendor/help-support/raise-query" replace />}
             />
 
             {/* Fallback route */}

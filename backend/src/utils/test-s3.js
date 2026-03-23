@@ -1,5 +1,13 @@
-const { S3Client, ListBucketsCommand } = require("@aws-sdk/client-s3");
-require("dotenv").config({ path: "../../.env" });
+import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,

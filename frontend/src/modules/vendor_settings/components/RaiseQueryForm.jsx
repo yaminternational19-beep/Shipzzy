@@ -1,15 +1,36 @@
 import React, { useState } from 'react';
-import { Send, AlertCircle } from 'lucide-react';
+import { Send, Users, User, Mail, Phone, ChevronRight } from 'lucide-react';
+import '../VendorSettings.css';
 
 const RaiseQueryForm = ({ onAddQuery }) => {
+  const recipients = [
+    { name: 'Admin Panel', email: 'admin@delivery.com', phone: '+91 33333 44444' },
+    { name: 'Support Team A', email: 'support@delivery.com', phone: '+91 11111 22222' },
+    { name: 'Finance Dept', email: 'finance@delivery.com', phone: '+91 55555 66666' },
+    { name: 'Menu Management', email: 'menu@delivery.com', phone: '+91 77777 88888' },
+    { name: 'Tech Support', email: 'tech@delivery.com', phone: '+91 99999 00000' },
+    { name: 'Account Manager', email: 'am@delivery.com', phone: '+91 22222 33333' }
+  ];
+
   const [formData, setFormData] = useState({
+    recipientIndex: 0,
     subject: '',
-    message: '',
-    priority: 'Low',
-    receiver: 'Admin'
+    message: ''
   });
 
   const [loading, setLoading] = useState(false);
+
+  const vendorScenarios = [
+    "Menu update taking too long",
+    "Cannot accept orders",
+    "App crashing on map screen",
+    "Payment payout issue",
+    "Account Verification Delay",
+    "Missing Reward Points",
+    "Product List Update",
+    "Order Payment Issue",
+    "Other Support Issue"
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -17,22 +38,32 @@ const RaiseQueryForm = ({ onAddQuery }) => {
 
     setLoading(true);
 
+    const selectedRecipient = recipients[formData.recipientIndex];
+
     // Simulate small delay for better UX
     setTimeout(() => {
       const newQuery = {
-        id: Date.now(),
+        id: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
         ...formData,
-        status: 'Pending',
+        // Current Vendor Metadata (System expected fields)
+        userName: 'Burger King',
+        userId: 'VND-301',
+        userType: 'VENDOR',
+        userPhone: '+91 12345 67890',
+        userEmail: 'bk@vendor.com',
+        // Recipient Metadata
+        recipientName: selectedRecipient.name,
+        recipientContact: `${selectedRecipient.phone} | ${selectedRecipient.email}`,
+        status: 'Open',
         admin_reply: null,
         created_at: new Date().toISOString()
       };
 
       onAddQuery(newQuery);
       setFormData({
+        recipientIndex: 0,
         subject: '',
-        message: '',
-        priority: 'Low',
-        receiver: 'Admin'
+        message: ''
       });
       setLoading(false);
     }, 500);
@@ -44,170 +75,76 @@ const RaiseQueryForm = ({ onAddQuery }) => {
   };
 
   return (
-    <div className="query-form-card" style={styles.card}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>Raise a Query</h3>
-        <p style={styles.subtitle}>Have an issue? We're here to help.</p>
+    <div className="query-form-card">
+      <div className="query-form-header">
+        <h3>Raise a Support Ticket</h3>
+        <p>Direct your query to the right department for faster resolution.</p>
       </div>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Subject</label>
-          <input
-            type="text"
+      <form onSubmit={handleSubmit} className="support-form">
+        <div className="form-group">
+          <label>Select Recipient Department</label>
+          <div className="recipient-grid">
+            {recipients.map((dept, index) => (
+              <div 
+                key={dept.name}
+                onClick={() => setFormData(prev => ({ ...prev, recipientIndex: index }))}
+                className={`recipient-item ${formData.recipientIndex === index ? 'active' : ''}`}
+              >
+                <span className="dept-name">
+                  {dept.name}
+                </span>
+                <span className="dept-email">{dept.email}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Query Subject</label>
+          <select
             name="subject"
             value={formData.subject}
             onChange={handleChange}
-            placeholder="What's the issue?"
-            style={styles.input}
+            className="support-select"
             required
-          />
+          >
+            <option value="" disabled>Select a scenario...</option>
+            {vendorScenarios.map(scenario => (
+              <option key={scenario} value={scenario}>{scenario}</option>
+            ))}
+          </select>
         </div>
 
-        <div style={styles.row}>
-          <div style={{ ...styles.formGroup, flex: 1 }}>
-            <label style={styles.label}>Priority</label>
-            <select
-              name="priority"
-              value={formData.priority}
-              onChange={handleChange}
-              style={styles.select}
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-          </div>
-          <div style={{ ...styles.formGroup, flex: 1 }}>
-            <label style={styles.label}>Receiver</label>
-            <select
-              name="receiver"
-              value={formData.receiver}
-              onChange={handleChange}
-              style={styles.select}
-              disabled
-            >
-              <option value="Admin">Admin</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Message</label>
+        <div className="form-group">
+          <label>Message Details</label>
           <textarea
             name="message"
             value={formData.message}
             onChange={handleChange}
-            placeholder="Describe your query in detail..."
+            placeholder="Please describe your issue clearly..."
             rows="5"
-            style={styles.textarea}
+            className="support-textarea"
             required
           />
         </div>
 
         <button
           type="submit"
-          disabled={loading}
-          style={loading ? { ...styles.button, opacity: 0.7, cursor: 'not-allowed' } : styles.button}
+          disabled={loading || !formData.subject}
+          className="support-submit-btn"
         >
           {loading ? (
-            'Submitting...'
+             'Sending Ticket...'
           ) : (
             <>
-              Submit Query <Send size={18} style={{ marginLeft: '8px' }} />
+              Send Query to {recipients[formData.recipientIndex].name} <Send size={18} style={{ marginLeft: '8px' }} />
             </>
           )}
         </button>
       </form>
     </div>
   );
-};
-
-const styles = {
-  card: {
-    backgroundColor: 'var(--bg-card, #fff)',
-    borderRadius: 'var(--border-radius-lg, 12px)',
-    boxShadow: 'var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1))',
-    padding: 'var(--spacing-lg, 24px)',
-    border: '1px solid var(--border-color, #e2e8f0)',
-    height: '100%'
-  },
-  header: {
-    marginBottom: 'var(--spacing-lg, 24px)'
-  },
-  title: {
-    fontSize: 'var(--font-size-xl, 1.25rem)',
-    fontWeight: 'var(--font-weight-bold, 700)',
-    color: 'var(--text-primary, #1e293b)',
-    margin: 0
-  },
-  subtitle: {
-    fontSize: 'var(--font-size-sm, 0.875rem)',
-    color: 'var(--text-secondary, #64748b)',
-    marginTop: '4px'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-md, 16px)'
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-sm, 8px)'
-  },
-  row: {
-    display: 'flex',
-    gap: 'var(--spacing-md, 16px)'
-  },
-  label: {
-    fontSize: 'var(--font-size-sm, 0.875rem)',
-    fontWeight: 'var(--font-weight-medium, 500)',
-    color: 'var(--text-primary, #1e293b)'
-  },
-  input: {
-    padding: '12px 16px',
-    borderRadius: 'var(--border-radius-md, 8px)',
-    border: '1px solid var(--border-color, #cbd5e1)',
-    fontSize: 'var(--font-size-sm, 0.875rem)',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-    backgroundColor: '#fff'
-  },
-  select: {
-    padding: '12px 16px',
-    borderRadius: 'var(--border-radius-md, 8px)',
-    border: '1px solid var(--border-color, #cbd5e1)',
-    fontSize: 'var(--font-size-sm, 0.875rem)',
-    outline: 'none',
-    backgroundColor: '#fff',
-    cursor: 'pointer'
-  },
-  textarea: {
-    padding: '12px 16px',
-    borderRadius: 'var(--border-radius-md, 8px)',
-    border: '1px solid var(--border-color, #cbd5e1)',
-    fontSize: 'var(--font-size-sm, 0.875rem)',
-    outline: 'none',
-    resize: 'none',
-    backgroundColor: '#fff'
-  },
-  button: {
-    marginTop: '8px',
-    padding: '12px 24px',
-    backgroundColor: 'var(--primary, #6366f1)',
-    color: '#fff',
-    borderRadius: 'var(--border-radius-md, 8px)',
-    border: 'none',
-    fontSize: 'var(--font-size-base, 1rem)',
-    fontWeight: 'var(--font-weight-semibold, 600)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)'
-  }
 };
 
 export default RaiseQueryForm;

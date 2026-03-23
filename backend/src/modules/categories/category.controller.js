@@ -1,11 +1,11 @@
-const ApiResponse = require("../../utils/apiResponse");
-const service = require("./category.service");
+import ApiResponse from '../../utils/apiResponse.js';
+import service from './category.service.js';
 
 /* ===============================
    CREATE CATEGORY
 ================================= */
 
-exports.createCategory = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
 
     const category = await service.createCategory(req.body, req.file);
@@ -31,7 +31,7 @@ exports.createCategory = async (req, res) => {
    GET CATEGORIES
 ================================= */
 
-exports.getCategories = async (req, res) => {
+export const getCategories = async (req, res) => {
   try {
 
     const result = await service.getCategories(req.query);
@@ -57,7 +57,7 @@ exports.getCategories = async (req, res) => {
    UPDATE CATEGORY
 ================================= */
 
-exports.updateCategory = async (req, res) => {
+export const updateCategory = async (req, res) => {
   try {
 
     const category = await service.updateCategory(
@@ -87,7 +87,7 @@ exports.updateCategory = async (req, res) => {
    DELETE CATEGORY
 ================================= */
 
-exports.deleteCategory = async (req, res) => {
+export const deleteCategory = async (req, res) => {
   try {
 
     const deleted = await service.deleteCategory(req.params.id);
@@ -113,7 +113,7 @@ exports.deleteCategory = async (req, res) => {
    TOGGLE CATEGORY STATUS
 ================================= */
 
-exports.toggleStatus = async (req, res) => {
+export const toggleStatus = async (req, res) => {
   try {
 
     const data = await service.toggleStatus(
@@ -136,3 +136,5 @@ exports.toggleStatus = async (req, res) => {
 
   }
 };
+
+export default { createCategory, getCategories, updateCategory, deleteCategory, toggleStatus };

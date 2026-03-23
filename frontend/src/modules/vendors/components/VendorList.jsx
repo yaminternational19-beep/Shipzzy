@@ -1,138 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronLeft, ChevronRight, CheckSquare, Square, Filter } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckSquare, Square, Filter, RefreshCw } from 'lucide-react';
 import ExportActions from '../../../components/common/ExportActions';
 import ActionButtons from '../../../components/common/ActionButtons';
+import { getVendorsApi, updateVendorStatusApi } from '../../../api/vendor.api';
+import { exportVendorsToPDF, exportVendorsToExcel } from '../services/export.service';
 
-// Random real-looking store cover images (food & retail themed via picsum/unsplash topics)
-const VENDOR_IMAGES = [
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=56&h=56&fit=crop',  // restaurant
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?w=56&h=56&fit=crop',  // grocery
-    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=56&h=56&fit=crop', // burger
-    'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=56&h=56&fit=crop', // cafe
-    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=56&h=56&fit=crop',  // pizza
-    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=56&h=56&fit=crop',  // fine dining
-    'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=56&h=56&fit=crop',  // bakery
-];
-
-const vendors = [
-    {
-        id: 'VND001',
-        name: 'Spice Garden',
-        business: 'Spice Garden Restaurants Pvt Ltd',
-        address: '12, MG Road, Bengaluru, Karnataka',
-        turnover: '₹3,24,500',
-        status: 'Active',
-        tier: 'Gold',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[0],
-    },
-    {
-        id: 'VND002',
-        name: 'Fresh Mart',
-        business: 'Fresh Mart Retail & Grocery Ltd',
-        address: '47, Linking Road, Mumbai, Maharashtra',
-        turnover: '₹9,87,200',
-        status: 'Active',
-        tier: 'Platinum',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[1],
-    },
-    {
-        id: 'VND003',
-        name: 'Burger Barn',
-        business: 'Burger Barn Food Chains Pvt Ltd',
-        address: '5, Connaught Place, New Delhi',
-        turnover: '₹6,42,000',
-        status: 'Active',
-        tier: 'Platinum',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[2],
-    },
-    {
-        id: 'VND004',
-        name: 'Local Brew Cafe',
-        business: 'Local Brew Hospitality & Cafe',
-        address: '9, Park Street, Kolkata, West Bengal',
-        turnover: '₹98,400',
-        status: 'Inactive',
-        tier: 'Silver',
-        kyc: 'Pending',
-        img: VENDOR_IMAGES[3],
-    },
-    {
-        id: 'VND005',
-        name: 'The Pizza Co.',
-        business: 'Pizza Co. Express Franchises Pvt Ltd',
-        address: '33, FC Road, Pune, Maharashtra',
-        turnover: '₹1,87,500',
-        status: 'Active',
-        tier: 'Gold',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[4],
-    },
-    {
-        id: 'VND006',
-        name: 'Tandoor House',
-        business: 'Tandoor House Culinary Services',
-        address: '21, Anna Salai, Chennai, Tamil Nadu',
-        turnover: '₹4,56,000',
-        status: 'Active',
-        tier: 'Gold',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[5],
-    },
-    {
-        id: 'VND007',
-        name: 'Bakery & More',
-        business: 'Bakery & More Confections Ltd',
-        address: '8, MI Road, Jaipur, Rajasthan',
-        turnover: '₹2,13,800',
-        status: 'Active',
-        tier: 'Silver',
-        kyc: 'Verified',
-        img: VENDOR_IMAGES[6],
-    },
-];
-
-const VendorList = ({ onEdit, onStatusToggle, onDelete, showToast, onTabChange }) => {
+const VendorList = ({ onEdit, onDelete, showToast, onTabChange, onStatsUpdate }) => {
+    const [vendors, setVendors] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedRows, setSelectedRows] = useState([]);
-    const [tierFilter, setTierFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [kycFilter, setKycFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0, limit: 10 });
     const navigate = useNavigate();
 
-    const toggleSelectAll = () => {
-        if (selectedRows.length === filteredVendors.length) {
-            setSelectedRows([]);
-        } else {
-            setSelectedRows(filteredVendors.map(v => v.id));
+    const fetchVendors = useCallback(async (page = 1) => {
+        setLoading(true);
+        try {
+            const params = { page, limit: 10 };
+            if (statusFilter) params.status = statusFilter;
+            if (kycFilter) params.kyc_status = kycFilter;
+            if (searchQuery) params.search = searchQuery;
+
+            const res = await getVendorsApi(params);
+            const { records, pagination: pg, stats } = res.data.data;
+            setVendors(records);
+            setPagination({
+                currentPage: pg.page,
+                totalPages: pg.totalPages,
+                totalRecords: pg.totalRecords,
+                limit: pg.limit
+            });
+            if (onStatsUpdate) onStatsUpdate(stats);
+        } catch (err) {
+            showToast?.('Failed to load vendors', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [statusFilter, kycFilter, searchQuery]);
+
+    useEffect(() => {
+        const debounce = setTimeout(() => fetchVendors(1), 350);
+        return () => clearTimeout(debounce);
+    }, [fetchVendors]);
+
+    const handleStatusToggle = async (vendor) => {
+        const newStatus = vendor.status === 'Active' ? 'Inactive' : 'Active';
+        try {
+            await updateVendorStatusApi(vendor.id, newStatus);
+            showToast?.(`${vendor.business_name} set to ${newStatus}`, 'success');
+            fetchVendors(pagination.currentPage);
+        } catch {
+            showToast?.('Failed to update status', 'error');
         }
     };
 
+    const toggleSelectAll = () => {
+        setSelectedRows(selectedRows.length === vendors.length ? [] : vendors.map(v => v.id));
+    };
+
     const toggleSelectRow = (id) => {
-        setSelectedRows(prev =>
-            prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
-        );
+        setSelectedRows(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
     };
 
-    const handleExport = (message, type) => {
-        showToast(message, type);
+    const handleExportDownload = (type) => {
+        const selectedVendors = vendors.filter(v => selectedRows.includes(v.id));
+        if (selectedVendors.length === 0) {
+            showToast?.('Please select vendors to export', 'warning');
+            return;
+        }
+
+        if (type === 'pdf') {
+            exportVendorsToPDF(selectedVendors);
+        } else {
+            exportVendorsToExcel(selectedVendors);
+        }
     };
 
-    const filteredVendors = vendors.filter(v => {
-        const matchesTier = tierFilter === 'All' || v.tier === tierFilter;
-        const matchesSearch =
-            v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            v.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            v.business.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            v.address.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesTier && matchesSearch;
-    });
-
-    const TIER_STYLE = {
-        Platinum: { badge: 'status-active', bg: '#eef2ff', color: '#4f46e5' },
-        Gold: { badge: 'status-pending', bg: '#fffbeb', color: '#b45309' },
-        Silver: { badge: 'status-blocked', bg: '#f1f5f9', color: '#475569' },
+    const KYC_BADGE = {
+        Pending: { cls: 'status-pending', label: 'PENDING' },
+        Approved: { cls: 'status-live', label: 'APPROVED' },
+        Rejected: { cls: 'status-blocked', label: 'REJECTED' },
     };
 
     return (
@@ -144,30 +94,45 @@ const VendorList = ({ onEdit, onStatusToggle, onDelete, showToast, onTabChange }
                         <Search className="search-icon" size={16} />
                         <input
                             type="text"
-                            placeholder="Search by ID, name, business, address..."
+                            placeholder="Search by name, code, email, mobile..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="input-with-icon" style={{ width: '180px' }}>
+                    <div className="input-with-icon" style={{ width: '160px' }}>
                         <Filter size={15} className="field-icon" />
-                        <select
-                            value={tierFilter}
-                            onChange={(e) => setTierFilter(e.target.value)}
-                        >
-                            <option value="All">All Tiers</option>
-                            <option value="Platinum">Platinum</option>
-                            <option value="Gold">Gold</option>
-                            <option value="Silver">Silver</option>
+                        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
                         </select>
                     </div>
+
+                    <div className="input-with-icon" style={{ width: '160px' }}>
+                        <Filter size={15} className="field-icon" />
+                        <select value={kycFilter} onChange={(e) => setKycFilter(e.target.value)}>
+                            <option value="">All KYC</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    <button
+                        className="btn btn-secondary"
+                        style={{ height: '38px', padding: '0 12px' }}
+                        onClick={() => fetchVendors(pagination.currentPage)}
+                    >
+                        <RefreshCw size={14} />
+                    </button>
                 </div>
 
                 <div className="filter-controls">
-                    <ExportActions
-                        selectedCount={selectedRows.length}
-                        onExport={handleExport}
+                    <ExportActions 
+                        selectedCount={selectedRows.length} 
+                        onExport={(msg, t) => showToast?.(msg, t)} 
+                        onDownload={handleExportDownload}
                     />
                 </div>
             </div>
@@ -175,139 +140,185 @@ const VendorList = ({ onEdit, onStatusToggle, onDelete, showToast, onTabChange }
             {/* Table */}
             <div style={{ overflowX: 'auto' }}>
                 <table className="dashboard-table">
-
                     <thead>
                         <tr>
-                            <th style={{ width: '48px' }}>
-                                <div
-                                    onClick={toggleSelectAll}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                >
-                                    {filteredVendors.length > 0 && selectedRows.length === filteredVendors.length
+                            <th style={{ width: '40px' }}>
+                                <div onClick={toggleSelectAll} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {vendors.length > 0 && selectedRows.length === vendors.length
                                         ? <CheckSquare size={17} color="var(--primary-color)" />
-                                        : <Square size={17} color="#94a3b8" />
-                                    }
+                                        : <Square size={17} color="#94a3b8" />}
                                 </div>
                             </th>
-                            <th>Image</th>
-                            <th>Vendor ID</th>
-                            <th>Vendor Name</th>
-                            <th>Business</th>
-                            <th>Address</th>
-                            <th>Turnover</th>
-                            <th>Tier</th>
-                            <th>Status</th>
-                            <th className="col-actions">Actions</th>
+                            <th style={{ textAlign: 'center' }}>Image</th>
+                            <th style={{ textAlign: 'center' }}>Vendor ID</th>
+                            <th style={{ textAlign: 'center' }}>Business Name</th>
+                            <th style={{ textAlign: 'center' }}>Vendor Name</th>
+                            <th style={{ textAlign: 'center' }}>Vendor Details</th>
+                            <th style={{ textAlign: 'center' }}>Address</th>
+                            <th style={{ textAlign: 'center' }}>Comm / Trnvr</th>
+                            <th style={{ textAlign: 'center' }}>Tier</th>
+                            <th style={{ textAlign: 'center' }}>KYC</th>
+                            <th style={{ textAlign: 'center' }}>Status</th>
+                            <th className="col-actions" style={{ textAlign: 'center' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredVendors.map((vendor) => (
-                            <tr
-                                key={vendor.id}
-                                style={{ background: selectedRows.includes(vendor.id) ? '#f8fafc' : 'white' }}
-                            >
-                                {/* Checkbox */}
-                                <td>
-                                    <div
-                                        onClick={() => toggleSelectRow(vendor.id)}
-                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                    >
+                        {loading ? (
+                            <tr>
+                                <td colSpan="12" style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                    Loading vendors...
+                                </td>
+                            </tr>
+                        ) : vendors.length === 0 ? (
+                            <tr>
+                                <td colSpan="12" style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                    No vendors found
+                                </td>
+                            </tr>
+                        ) : vendors.map((vendor) => (
+                            <tr key={vendor.id} style={{ background: selectedRows.includes(vendor.id) ? '#f8fafc' : 'white' }}>
+                                <td style={{ textAlign: 'center' }}>
+                                    <div onClick={() => toggleSelectRow(vendor.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {selectedRows.includes(vendor.id)
                                             ? <CheckSquare size={17} color="var(--primary-color)" />
-                                            : <Square size={17} color="#94a3b8" />
-                                        }
+                                            : <Square size={17} color="#94a3b8" />}
                                     </div>
                                 </td>
 
-                                {/* Vendor Image */}
-                                <td>
-                                    <div style={{
-                                        width: '44px',
-                                        height: '44px',
-                                        borderRadius: '10px',
-                                        overflow: 'hidden',
-                                        border: '2px solid #e2e8f0',
-                                        flexShrink: 0,
-                                    }}>
+                                <td style={{ textAlign: 'center' }}>
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '10px', overflow: 'hidden', border: '2px solid #e2e8f0', margin: '0 auto' }}>
                                         <img
-                                            src={vendor.img}
-                                            alt={vendor.name}
+                                            src={
+                                                vendor.profile_photo
+                                                    ? vendor.profile_photo
+                                                    : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(vendor.business_name)}&backgroundColor=6366f1`
+                                            }
+                                            alt={vendor.business_name}
                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             onError={(e) => {
-                                                e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${vendor.name}&backgroundColor=6366f1,4f46e5`;
+                                                e.target.onerror = null; // prevent infinite loop
+                                                e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(vendor.business_name)}&backgroundColor=6366f1`;
                                             }}
                                         />
                                     </div>
                                 </td>
 
-                                {/* Vendor ID */}
-                                <td>
+                                <td style={{ textAlign: 'center' }}>
                                     <span style={{ fontWeight: 700, color: '#4f46e5', fontSize: '13px' }}>
-                                        {vendor.id}
+                                        {vendor.vendor_code}
                                     </span>
                                 </td>
 
-                                {/* Vendor Name */}
-                                <td>
-                                    <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>
-                                        {vendor.name}
+                                <td style={{ textAlign: 'center' }}>
+                                    <span style={{ fontWeight: 600, color: '#111827', fontSize: '14px', display: 'block' }}>
+                                        {vendor.business_name}
+                                    </span>
+                                    {/* Business Category Chips */}
+                                    {(() => {
+                                        let cats = vendor.business_categories;
+                                        if (typeof cats === 'string') {
+                                            try { cats = JSON.parse(cats); } catch { cats = [cats]; }
+                                        }
+                                        if (!Array.isArray(cats) || cats.length === 0) return null;
+                                        const CHIP_COLORS = [
+                                            { bg: '#ede9fe', color: '#7c3aed' },
+                                            { bg: '#dbeafe', color: '#1d4ed8' },
+                                            { bg: '#d1fae5', color: '#065f46' },
+                                            { bg: '#fef3c7', color: '#92400e' },
+                                            { bg: '#fce7f3', color: '#9d174d' },
+                                            { bg: '#e0f2fe', color: '#0369a1' },
+                                        ];
+                                        return (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '5px', justifyContent: 'center' }}>
+                                                {cats.map((cat, i) => {
+                                                    const c = CHIP_COLORS[i % CHIP_COLORS.length];
+                                                    return (
+                                                        <span key={i} style={{
+                                                            background: c.bg,
+                                                            color: c.color,
+                                                            fontSize: '10px',
+                                                            fontWeight: 700,
+                                                            padding: '2px 7px',
+                                                            borderRadius: '20px',
+                                                            letterSpacing: '0.02em',
+                                                            whiteSpace: 'nowrap'
+                                                        }}>
+                                                            {cat}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })()}
+                                </td>
+
+                                <td style={{ textAlign: 'center' }}>
+                                    {/* Owner Name */}
+                                    <span style={{ fontWeight: 700, color: '#111827', fontSize: '13px', display: 'block' }}>
+                                        {vendor.owner_name}
                                     </span>
                                 </td>
 
-                                {/* Business (separate column) */}
-                                <td>
-                                    <span style={{ fontSize: '13px', color: '#374151', fontWeight: 500 }}>
-                                        {vendor.business}
+                                <td style={{ textAlign: 'center' }}>
+                                    {/* Phone with country code */}
+                                    <span style={{ fontWeight: 700, color: '#374151', fontSize: '12px', display: 'block', marginTop: '3px' }}>
+                                        {vendor.country_code} {vendor.mobile}
+                                    </span>
+                                    {/* Email - light color */}
+                                    <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                                        {vendor.email}
                                     </span>
                                 </td>
 
-                                {/* Address (separate column) */}
-                                <td style={{ maxWidth: '200px' }}>
-                                    <span style={{ fontSize: '12px', color: '#6b7280', lineHeight: '1.4' }}>
-                                        {vendor.address}
+                                <td style={{ textAlign: 'center' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block' }}>
+                                        {vendor.city}, {vendor.state}
+                                    </span>
+                                    <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>
+                                        {vendor.country}
                                     </span>
                                 </td>
 
-                                {/* Turnover in INR */}
-                                <td>
-                                    <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '14px' }}>
-                                        {vendor.turnover}
-                                    </span>
-                                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>per month</div>
+                                <td style={{ textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#111827' }}>
+                                            {vendor.commission_percent}%
+                                        </span>
+                                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#4f46e5' }}>
+                                            ₹{parseFloat(vendor.total_turnover || 0).toLocaleString()}
+                                        </span>
+                                    </div>
                                 </td>
 
-                                {/* Tier Badge */}
-                                <td>
-                                    <span
-                                        className={`status-badge`}
-                                        style={{
-                                            background: TIER_STYLE[vendor.tier]?.bg,
-                                            color: TIER_STYLE[vendor.tier]?.color,
-                                            fontWeight: 700,
-                                            fontSize: '11px',
-                                        }}
-                                    >
-                                        {vendor.tier}
+                                <td style={{ textAlign: 'center' }}>
+                                    <span className="status-badge" style={{ background: '#eef2ff', color: '#4f46e5', fontWeight: 700, fontSize: '11px', margin: '0 auto' }}>
+                                        {vendor.tier_name || 'N/A'}
                                     </span>
                                 </td>
 
-                                {/* Status Badge */}
-                                <td>
-                                    <span className={`status-badge ${vendor.status === 'Active' ? 'status-live' : 'status-blocked'}`}>
-                                        {vendor.status === 'Active' ? 'ACTIVE' : 'DEACTIVE'}
+                                <td style={{ textAlign: 'center' }}>
+                                    <span className={`status-badge ${KYC_BADGE[vendor.kyc_status]?.cls || 'status-pending'}`} style={{ margin: '0 auto' }}>
+                                        {KYC_BADGE[vendor.kyc_status]?.label || vendor.kyc_status}
                                     </span>
                                 </td>
 
-                                {/* Actions */}
-                                <td className="col-actions">
-                                    <ActionButtons
-                                        onView={() => navigate(`/vendors/${vendor.id}`, { state: { vendor } })}
-                                        onEdit={() => onEdit?.(vendor)}
-                                        onDelete={() => onDelete?.(vendor)}
-                                        onPermissions={() => onTabChange?.('kyc')}
-                                        onToggleStatus={() => onStatusToggle?.(vendor)}
-                                        isActive={vendor.status === 'Active'}
-                                    />
+                                <td style={{ textAlign: 'center' }}>
+                                    <span className={`status-badge ${vendor.status === 'Active' ? 'status-live' : 'status-blocked'}`} style={{ margin: '0 auto' }}>
+                                        {vendor.status === 'Active' ? 'ACTIVE' : 'INACTIVE'}
+                                    </span>
+                                </td>
+
+                                <td className="col-actions" style={{ textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <ActionButtons
+                                            onView={() => navigate(`/vendors/${vendor.id}`, { state: { vendor } })}
+                                            onEdit={() => onEdit?.(vendor)}
+                                            onDelete={() => onDelete?.(vendor)}
+                                            onPermissions={() => onTabChange?.('kyc')}
+                                            onToggleStatus={() => handleStatusToggle(vendor)}
+                                            isActive={vendor.status === 'Active'}
+                                        />
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -315,15 +326,25 @@ const VendorList = ({ onEdit, onStatusToggle, onDelete, showToast, onTabChange }
                 </table>
             </div>
 
+            {/* Pagination */}
             <div className="c-pagination" style={{ borderTop: '1px solid var(--border-color)' }}>
                 <span className="c-pagination-info">
-                    Showing {filteredVendors.length} of {vendors.length} entries
+                    Showing {vendors.length} of {pagination.totalRecords} vendors
+                    &nbsp;|&nbsp; Page {pagination.currentPage} of {pagination.totalPages}
                 </span>
                 <div className="c-pagination-btns">
-                    <button className="c-page-btn" disabled>
+                    <button
+                        className="c-page-btn"
+                        disabled={pagination.currentPage <= 1 || loading}
+                        onClick={() => fetchVendors(pagination.currentPage - 1)}
+                    >
                         <ChevronLeft size={16} /> Prev
                     </button>
-                    <button className="c-page-btn">
+                    <button
+                        className="c-page-btn"
+                        disabled={pagination.currentPage >= pagination.totalPages || loading}
+                        onClick={() => fetchVendors(pagination.currentPage + 1)}
+                    >
                         Next <ChevronRight size={16} />
                     </button>
                 </div>

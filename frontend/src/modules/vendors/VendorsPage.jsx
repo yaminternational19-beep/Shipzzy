@@ -20,7 +20,10 @@ import './Vendors.css';
 const VendorManagement = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [showForm, setShowForm] = useState(false);
+    const [showTierModal, setShowTierModal] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(Date.now());
     const [editingVendor, setEditingVendor] = useState(null);
+    const [vendorStats, setVendorStats] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     const showToast = (message, type = 'success') => {
@@ -33,13 +36,17 @@ const VendorManagement = () => {
         setShowForm(true);
     };
 
-    const handleStatusToggle = (vendor) => {
-        const newStatus = vendor.status === 'Active' ? 'Deactivated' : 'Activated';
-        showToast(`${vendor.name} has been ${newStatus}.`, 'success');
+    const handleSaveVendor = (data) => {
+        setShowForm(false);
+        setEditingVendor(null);
+        setRefreshKey(Date.now()); // Trigger refresh
+        const vendorName = data.businessName || 'Vendor';
+        showToast(`${vendorName} ${editingVendor ? 'updated' : 'registered'} successfully!`, 'success');
     };
 
     const handleDeleteVendor = (vendor) => {
-        showToast(`${vendor.name} has been deleted.`, 'success');
+        showToast(`${vendor.business_name} has been deleted.`, 'success');
+        setRefreshKey(Date.now()); // Also refresh on delete
     };
 
     const renderContent = () => {
@@ -47,15 +54,21 @@ const VendorManagement = () => {
             case 'overview':
                 return (
                     <VendorList
+                        key={refreshKey}
                         onEdit={handleEditVendor}
-                        onStatusToggle={handleStatusToggle}
                         onDelete={handleDeleteVendor}
                         showToast={showToast}
                         onTabChange={setActiveTab}
+                        onStatsUpdate={setVendorStats}
                     />
                 );
             case 'tiering':
-                return <VendorTiering />;
+                return (
+                    <VendorTiering 
+                        showExternalModal={showTierModal} 
+                        onModalClose={() => setShowTierModal(false)} 
+                    />
+                );
             case 'kyc':
                 return <VendorKYC showToast={showToast} />;
             case 'logs':
@@ -82,19 +95,26 @@ const VendorManagement = () => {
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Vendor Management</h1>
                     <p style={{ fontSize: '0.9rem', color: '#64748b', margin: 0 }}>Manage platform partners, onboarding, and kyc verification</p>
                 </div>
-                {!showForm && activeTab === 'overview' && (
+                {!showForm && (activeTab === 'overview' || activeTab === 'tiering') && (
                     <button
                         className="btn btn-primary"
-                        onClick={() => { setEditingVendor(null); setShowForm(true); }}
+                        onClick={() => {
+                            if (activeTab === 'overview') {
+                                setEditingVendor(null);
+                                setShowForm(true);
+                            } else {
+                                setShowTierModal(true);
+                            }
+                        }}
                     >
-                        <Plus size={18} /> Add New Vendor
+                        <Plus size={18} /> {activeTab === 'overview' ? 'Add New Vendor' : 'Add New Tier'}
                     </button>
                 )}
             </div>
 
             {!showForm && (
                 <>
-                    <VendorStats />
+                    <VendorStats stats={vendorStats} />
 
                     {/* Tabs */}
                     <div className="tab-group-pills">
@@ -135,12 +155,7 @@ const VendorManagement = () => {
                 <VendorForm
                     initialData={editingVendor}
                     onCancel={() => { setShowForm(false); setEditingVendor(null); }}
-                    onSave={(data) => {
-                        setShowForm(false);
-                        setEditingVendor(null);
-                        const vendorName = data.businessName || 'Vendor';
-                        showToast(`${vendorName} ${editingVendor ? 'updated' : 'registered'} successfully!`, 'success');
-                    }}
+                    onSave={handleSaveVendor}
                 />
             )}
         </div>

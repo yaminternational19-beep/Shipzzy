@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -75,7 +75,7 @@ DELIVERY APP Team
 
 };
 
-module.exports = {
+export default {
   sendEmail,
   sendLoginOtp,
   sendForgotPasswordOtp

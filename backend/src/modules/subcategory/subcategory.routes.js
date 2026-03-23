@@ -1,12 +1,12 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const controller = require("./subcategory.controller");
-const validate = require("../../middlewares/validate");
+import controller from './subcategory.controller.js';
+import validate from '../../middlewares/validate.js';
 
-const { createSubCategorySchema,updateSubCategorySchema } = require("./subcategory.validator");
+import { createSubCategorySchema,updateSubCategorySchema } from './subcategory.validator.js';
 
-const upload = require("../../middlewares/upload.middleware");
+import upload from '../../middlewares/upload.middleware.js';
 
 /* ===============================
    GET SUBCATEGORIES
@@ -38,4 +38,4 @@ router.delete("/:id", controller.deleteSubCategory);
 
 router.patch("/:id/status", controller.toggleStatus);
 
-module.exports = router;
+export default router;

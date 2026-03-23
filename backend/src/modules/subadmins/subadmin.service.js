@@ -1,6 +1,6 @@
-const { getPagination, getPaginationMeta } = require("../../utils/pagination");
-const buildFilters = require("../../utils/filter");
-const db = require("../../config/db");
+import { getPagination, getPaginationMeta } from '../../utils/pagination.js';
+import buildFilters from '../../utils/filter.js';
+import db from '../../config/db.js';
 
 
 /* ===============================
@@ -427,7 +427,7 @@ const updatePermissions = async (id, permissions) => {
    EXPORTS
 ================================= */
 
-module.exports = {
+export default {
   getSubAdmins,
   getAccessLogs,
   createSubAdmin,

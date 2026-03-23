@@ -10,157 +10,94 @@ import {
     Search,
     User,
     MapPin,
-    CreditCard
+    CreditCard,
+    Loader,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
+import { getVendorsApi, updateVendorKycStatusApi } from '../../../api/vendor.api';
+import { useCallback, useEffect } from 'react';
 
 const VendorKYC = ({ showToast }) => {
-    const [kycRequests, setKycRequests] = useState([
-        {
-            id: 'KYC-1001',
-            vendorName: 'Organic Harvest Co',
-            companyId: 'V-8821',
-            submittedDate: '2026-02-15',
-            status: 'Pending',
-            ownerName: 'Rahul Sharma',
-            category: 'Grocery',
-            email: 'rahul@organicharvest.com',
-            mobile: '+91 98765 43210',
-            emergencyMobile: '+91 87654 32109',
-            address: 'Plot 45, Industrial Area Phase II',
-            city: 'Bangalore',
-            state: 'Karnataka',
-            country: 'India',
-            pincode: '560001',
-            bankDetails: {
-                bankName: 'HDFC Bank',
-                accountName: 'Organic Harvest Co',
-                accountNumber: '50100223344556',
-                ifsc: 'HDFC0001234'
-            },
-            documents: [
-                { type: 'GST Certificate', id: 'GST-9921-X', file: 'gst_cert.pdf', status: 'verified' },
-                { type: 'PAN Card', id: 'AYYPB1234F', file: 'pan_card.jpg', status: 'verified' },
-                { type: 'Address Proof', id: 'ADD-5521', file: 'utility_bill.pdf', status: 'pending' },
-                { type: 'Trade License', id: 'TL-7721', file: 'trade_license.pdf', status: 'pending' }
-            ]
-        },
-        {
-            id: 'KYC-1002',
-            vendorName: 'ElectroHub Retail',
-            companyId: 'V-9902',
-            submittedDate: '2026-02-16',
-            status: 'Pending',
-            ownerName: 'Sanjay Gupta',
-            category: 'Electronics',
-            email: 'contact@electrohub.in',
-            mobile: '+91 91234 56789',
-            emergencyMobile: '+91 90000 11111',
-            address: 'Shop No 12, MG Road Plaza',
-            city: 'Pune',
-            state: 'Maharashtra',
-            country: 'India',
-            pincode: '411001',
-            bankDetails: {
-                bankName: 'ICICI Bank',
-                accountName: 'ElectroHub Retail',
-                accountNumber: '100200300400',
-                ifsc: 'ICIC0005566'
-            },
-            documents: [
-                { type: 'GST Certificate', id: 'GST-7721-P', file: 'gst_cert_electro.pdf', status: 'verified' },
-                { type: 'PAN Card', id: 'BPPPB5678G', file: 'pan_electro.png', status: 'verified' },
-                { type: 'Address Proof', id: 'ADD-9902', file: 'rent_agreement.pdf', status: 'verified' }
-            ]
-        },
-        {
-            id: 'KYC-1003',
-            vendorName: 'Fashion Forward',
-            companyId: 'V-4412',
-            submittedDate: '2026-02-14',
-            status: 'Rejected',
-            rejectionReason: 'Blurred PAN card image. Please resubmit a clearer scan.',
-            ownerName: 'Anjali Verma',
-            category: 'Fashion',
-            email: 'admin@fashionforward.com',
-            mobile: '+91 98888 77777',
-            emergencyMobile: '+91 97777 66666',
-            address: 'Suite 201, Crystal Tower',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            country: 'India',
-            pincode: '400001',
-            bankDetails: {
-                bankName: 'Axis Bank',
-                accountName: 'Fashion Forward',
-                accountNumber: '912010055566677',
-                ifsc: 'UTIB0001122'
-            },
-            documents: [
-                { type: 'GST Certificate', id: 'GST-1102-K', file: 'fashion_gst.pdf', status: 'verified' },
-                { type: 'PAN Card', id: 'CPPPC9012H', file: 'fashion_pan.jpg', status: 'rejected' }
-            ]
-        },
-        {
-            id: 'KYC-1004',
-            vendorName: 'Tandoor House',
-            companyId: 'V-3301',
-            submittedDate: '2026-02-17',
-            status: 'Approved',
-            ownerName: 'Vikram Singh',
-            category: 'Restaurants',
-            email: 'info@tandoorhouse.com',
-            mobile: '+91 93333 44444',
-            emergencyMobile: '+91 92222 55555',
-            address: '21, Anna Salai, Near Central Mall',
-            city: 'Chennai',
-            state: 'Tamil Nadu',
-            country: 'India',
-            pincode: '600002',
-            bankDetails: {
-                bankName: 'SBI Bank',
-                accountName: 'Tandoor House Culinary',
-                accountNumber: '312400012345',
-                ifsc: 'SBIN0004567'
-            },
-            documents: [
-                { type: 'GST Certificate', id: 'GST-3301-T', file: 'tandoor_gst.pdf', status: 'verified' },
-                { type: 'PAN Card', id: 'DPPVB3301T', file: 'tandoor_pan.jpg', status: 'verified' },
-                { type: 'FSSAI License', id: 'FSSAI-9900', file: 'fssai.pdf', status: 'verified' }
-            ]
-        }
-    ]);
-
-    const [selectedRequest, setSelectedRequest] = useState(kycRequests[0]);
+    const [kycRequests, setKycRequests] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    
+    // Accordion State
+    const [openSections, setOpenSections] = useState({
+        business: true,
+        commercial: true,
+        location: true,
+        bank: true,
+        docs: true
+    });
+
+    const toggleSection = (section) => {
+        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+
+    const fetchKycRequests = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await getVendorsApi({ fetchAll: true });
+            if (res.data.success) {
+                setKycRequests(res.data.data.records);
+                // Also update selected request if it exists to keep it in sync
+                if (selectedRequest) {
+                    const updated = res.data.data.records.find(r => r.id === selectedRequest.id);
+                    if (updated) setSelectedRequest(updated);
+                }
+            }
+        } catch (err) {
+            showToast?.('Failed to load KYC requests', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [selectedRequest, showToast]);
+
+    useEffect(() => {
+        fetchKycRequests();
+    }, []);
 
     const filteredRequests = React.useMemo(() => {
         return kycRequests.filter(req => {
             const matchesSearch =
-                req.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                req.companyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                req.id.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === 'All' || req.status === statusFilter;
+                (req.business_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (req.vendor_code || '').toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesStatus = statusFilter === 'All' || req.kyc_status === statusFilter;
             return matchesSearch && matchesStatus;
         });
     }, [kycRequests, searchQuery, statusFilter]);
 
-    const handleApprove = (id) => {
-        setKycRequests(prev => prev.map(req =>
-            req.id === id ? { ...req, status: 'Approved' } : req
-        ));
-        showToast(`KYC for ${selectedRequest.vendorName} approved successfully!`, 'success');
-        setSelectedRequest(prev => ({ ...prev, status: 'Approved' }));
+    const handleApprove = async (id) => {
+        try {
+            const res = await updateVendorKycStatusApi(id, { kyc_status: 'Approved' });
+            if (res.data.success) {
+                showToast(`KYC for ${selectedRequest.business_name} approved successfully!`, 'success');
+                fetchKycRequests();
+            }
+        } catch (err) {
+            showToast?.('Failed to approve KYC', 'error');
+        }
     };
 
-    const handleReject = (id) => {
+    const handleReject = async (id) => {
         const reason = prompt('Enter rejection reason:');
         if (reason) {
-            setKycRequests(prev => prev.map(req =>
-                req.id === id ? { ...req, status: 'Rejected', rejectionReason: reason } : req
-            ));
-            showToast(`KYC for ${selectedRequest.vendorName} rejected.`, 'error');
-            setSelectedRequest(prev => ({ ...prev, status: 'Rejected', rejectionReason: reason }));
+            try {
+                const res = await updateVendorKycStatusApi(id, { 
+                    kyc_status: 'Rejected', 
+                    kyc_reject_reason: reason 
+                });
+                if (res.data.success) {
+                    showToast(`KYC for ${selectedRequest.business_name} rejected.`, 'error');
+                    fetchKycRequests();
+                }
+            } catch (err) {
+                showToast?.('Failed to reject KYC', 'error');
+            }
         }
     };
 
@@ -185,33 +122,28 @@ const VendorKYC = ({ showToast }) => {
                                 <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1rem', color: '#1e293b' }}>Verification Requests</h3>
                                 <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>{kycRequests.length} total applications</p>
                             </div>
-                            {pendingCount > 0 && (
-                                <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
-                                    {pendingCount} Pending
-                                </span>
-                            )}
                         </div>
 
                         {/* Filters */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                            <div className="filter-search" style={{ flex: 1 }}>
-                                <Search className="search-icon" size={16} />
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+                            <div className="filter-search" style={{ flex: '1 1 120px' }}>
+                                <Search className="search-icon" size={14} />
                                 <input
                                     type="text"
                                     className="search-input"
-                                    placeholder="Search vendor or ID..."
+                                    placeholder="Search..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ height: '38px', fontSize: '13px' }}
+                                    style={{ height: '34px', fontSize: '12px' }}
                                 />
                             </div>
                             <select
                                 className="filter-select"
-                                style={{ width: '120px', fontSize: '12px' }}
+                                style={{ width: '90px', fontSize: '11px', height: '34px', padding: '0 8px', flexShrink: 0 }}
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
-                                <option value="All">All Status</option>
+                                <option value="All">Status</option>
                                 <option value="Pending">Pending</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
@@ -221,8 +153,14 @@ const VendorKYC = ({ showToast }) => {
 
                     {/* Request List */}
                     <div className="kyc-list-scroll">
-                        {filteredRequests.length > 0 ? filteredRequests.map((request) => {
-                            const s = statusStyle[request.status] || {};
+                        {loading && kycRequests.length === 0 ? (
+                            <div style={{ padding: '48px 20px', textAlign: 'center', color: '#94a3b8' }}>
+                                <Loader className="spin" size={32} style={{ marginBottom: '12px' }} />
+                                <p style={{ fontSize: '13px', margin: 0 }}>Fetching requests...</p>
+                            </div>
+                        ) : filteredRequests.length > 0 ? filteredRequests.map((request) => {
+                            const currentStatus = request.kyc_status || 'Pending';
+                            const s = statusStyle[currentStatus] || {};
                             return (
                                 <div
                                     key={request.id}
@@ -233,24 +171,24 @@ const VendorKYC = ({ showToast }) => {
                                         {/* Avatar */}
                                         <div style={{ width: '38px', height: '38px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, border: '1.5px solid #e2e8f0' }}>
                                             <img
-                                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${request.vendorName}`}
-                                                alt={request.vendorName}
-                                                style={{ width: '100%', height: '100%' }}
+                                                src={request.profile_photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.business_name}`}
+                                                alt={request.business_name}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             />
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {request.vendorName}
+                                                {request.business_name}
                                             </div>
                                             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                                                {request.id} · {request.submittedDate}
+                                                {request.vendor_code} · {new Date(request.created_at).toLocaleDateString()}
                                             </div>
                                         </div>
-                                        <span className={`status-badge ${request.status === 'Approved' ? 'status-approved' :
-                                            request.status === 'Rejected' ? 'status-blocked' :
+                                        <span className={`status-badge ${currentStatus === 'Approved' ? 'status-approved' :
+                                            currentStatus === 'Rejected' ? 'status-blocked' :
                                                 'status-pending'
-                                            }`} style={{ fontSize: '10px', padding: '3px 10px', flexShrink: 0 }}>
-                                            {request.status.toUpperCase()}
+                                            }`} style={{ fontSize: '9px', padding: '2px 8px', flexShrink: 0, minWidth: '65px', textAlign: 'center' }}>
+                                            {currentStatus.toUpperCase()}
                                         </span>
                                     </div>
                                 </div>
@@ -273,30 +211,53 @@ const VendorKYC = ({ showToast }) => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div style={{ width: '52px', height: '52px', borderRadius: '14px', overflow: 'hidden', border: '2px solid #e2e8f0', flexShrink: 0 }}>
                                         <img
-                                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedRequest.vendorName}`}
-                                            alt={selectedRequest.vendorName}
-                                            style={{ width: '100%', height: '100%' }}
+                                            src={selectedRequest.profile_photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedRequest.business_name}`}
+                                            alt={selectedRequest.business_name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                         />
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>
-                                            {selectedRequest.vendorName}
+                                            {selectedRequest.business_name}
                                         </h3>
                                         <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                                            <span>ID: {selectedRequest.companyId}</span>
+                                            <span>ID: {selectedRequest.vendor_code}</span>
                                             <span>·</span>
-                                            <span>{selectedRequest.category}</span>
+                                            <span>Tier: {selectedRequest.tier_name || 'Standard'}</span>
                                             <span>·</span>
-                                            <span>Submitted: {selectedRequest.submittedDate}</span>
+                                            <span>Joined: {new Date(selectedRequest.created_at).toLocaleDateString()}</span>
                                         </div>
                                     </div>
                                     <span style={{
-                                        background: statusStyle[selectedRequest.status]?.bg,
-                                        color: statusStyle[selectedRequest.status]?.color,
+                                        background: statusStyle[selectedRequest.kyc_status]?.bg || '#f1f5f9',
+                                        color: statusStyle[selectedRequest.kyc_status]?.color || '#475569',
                                         padding: '6px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '12px'
                                     }}>
-                                        {statusStyle[selectedRequest.status]?.label}
+                                        {(selectedRequest.kyc_status || 'Pending').toUpperCase()}
                                     </span>
+                                </div>
+                                {/* Business Categories Chips */}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '16px', paddingLeft: '68px' }}>
+                                    {(() => {
+                                        let cats = selectedRequest.business_categories;
+                                        if (typeof cats === 'string') {
+                                            try { cats = JSON.parse(cats); } catch { cats = [cats]; }
+                                        }
+                                        if (!Array.isArray(cats)) return null;
+                                        return cats.map((cat, i) => (
+                                            <span key={i} style={{
+                                                background: '#f1f5f9',
+                                                color: '#475569',
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                fontSize: '11px',
+                                                fontWeight: 700,
+                                                letterSpacing: '0.02em'
+                                            }}>
+                                                {cat.toUpperCase()}
+                                            </span>
+                                        ));
+                                    })()}
                                 </div>
                             </div>
 
@@ -305,133 +266,203 @@ const VendorKYC = ({ showToast }) => {
 
                                 {/* Section: Business & Contact */}
                                 <div className="kyc-section">
-                                    <h4 className="kyc-section-header">
-                                        <User size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
-                                        Business & Contact Information
+                                    <h4 className="kyc-section-header" onClick={() => toggleSection('business')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>
+                                            <User size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
+                                            Business & Contact Information
+                                        </span>
+                                        {openSections.business ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </h4>
-                                    <div className="kyc-info-grid">
-                                        {[
-                                            { label: 'Owner Name', value: selectedRequest.ownerName },
-                                            { label: 'Email Address', value: selectedRequest.email },
-                                            { label: 'Contact Number', value: selectedRequest.mobile },
-                                            { label: 'Emergency Number', value: selectedRequest.emergencyMobile },
-                                        ].map((item, i) => (
-                                            <div key={i} className="kyc-info-item">
-                                                <label>{item.label}</label>
-                                                <div className="kyc-info-value">{item.value}</div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {openSections.business && (
+                                        <div className="kyc-info-grid">
+                                            {[
+                                                { label: 'Business Name', value: selectedRequest.business_name },
+                                                { label: 'Owner Name', value: selectedRequest.owner_name },
+                                                { label: 'Email Address', value: selectedRequest.email },
+                                                { label: 'Contact Number', value: `${selectedRequest.country_code || ''} ${selectedRequest.mobile || ''}` },
+                                                { label: 'Emergency Number', value: `${selectedRequest.emergency_country_code || ''} ${selectedRequest.emergency_mobile || ''}` },
+                                            ].map((item, i) => (
+                                                <div key={i} className="kyc-info-item">
+                                                    <label>{item.label}</label>
+                                                    <div className="kyc-info-value">{item.value}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Section: Commercial Details */}
+                                <div className="kyc-section">
+                                    <h4 className="kyc-section-header" onClick={() => toggleSection('commercial')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>
+                                            <AlertCircle size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
+                                            Commercial & Tier Details
+                                        </span>
+                                        {openSections.commercial ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                    </h4>
+                                    {openSections.commercial && (
+                                        <div className="kyc-info-grid">
+                                            {[
+                                                { label: 'Current Tier', value: selectedRequest.tier_name || 'Standard' },
+                                                { label: 'Commission Rate', value: `${selectedRequest.commission_percent || '0.00'}%` },
+                                                { label: 'Total Turnover (₹)', value: selectedRequest.total_turnover || '0.00' },
+                                                { label: 'Account Created', value: new Date(selectedRequest.created_at).toLocaleDateString() },
+                                            ].map((item, i) => (
+                                                <div key={i} className="kyc-info-item">
+                                                    <label>{item.label}</label>
+                                                    <div className="kyc-info-value" style={{ color: item.label.includes('Turnover') ? '#10b981' : '#1e293b', fontWeight: 800 }}>
+                                                        {item.value || 'N/A'}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Section: Location */}
                                 <div className="kyc-section">
-                                    <h4 className="kyc-section-header">
-                                        <MapPin size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
-                                        Location Details
+                                    <h4 className="kyc-section-header" onClick={() => toggleSection('location')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>
+                                            <MapPin size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
+                                            Location Details
+                                        </span>
+                                        {openSections.location ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </h4>
-                                    <div className="kyc-info-grid">
-                                        <div className="kyc-info-item span-2">
-                                            <label>Street Address</label>
-                                            <div className="kyc-info-value">{selectedRequest.address}</div>
+                                    {openSections.location && (
+                                        <div className="kyc-info-grid">
+                                            <div className="kyc-info-item span-2">
+                                                <label>Street Address</label>
+                                                <div className="kyc-info-value">{selectedRequest.address}</div>
+                                            </div>
+                                            <div className="kyc-info-item">
+                                                <label>City / State</label>
+                                                <div className="kyc-info-value">{selectedRequest.city}, {selectedRequest.state}</div>
+                                            </div>
+                                            <div className="kyc-info-item">
+                                                <label>Country / Pincode</label>
+                                                <div className="kyc-info-value">{selectedRequest.country} — {selectedRequest.pincode}</div>
+                                            </div>
                                         </div>
-                                        <div className="kyc-info-item">
-                                            <label>City / State</label>
-                                            <div className="kyc-info-value">{selectedRequest.city}, {selectedRequest.state}</div>
-                                        </div>
-                                        <div className="kyc-info-item">
-                                            <label>Country / Pincode</label>
-                                            <div className="kyc-info-value">{selectedRequest.country} — {selectedRequest.pincode}</div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Section: Bank */}
                                 <div className="kyc-section">
-                                    <h4 className="kyc-section-header">
-                                        <CreditCard size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
-                                        Bank Information
+                                    <h4 className="kyc-section-header" onClick={() => toggleSection('bank')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>
+                                            <CreditCard size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
+                                            Bank Information
+                                        </span>
+                                        {openSections.bank ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </h4>
-                                    <div className="kyc-info-grid">
-                                        {[
-                                            { label: 'Bank Name', value: selectedRequest.bankDetails.bankName },
-                                            { label: 'Account Holder', value: selectedRequest.bankDetails.accountName },
-                                            { label: 'Account Number', value: selectedRequest.bankDetails.accountNumber },
-                                            { label: 'IFSC Code', value: selectedRequest.bankDetails.ifsc },
-                                        ].map((item, i) => (
-                                            <div key={i} className="kyc-info-item">
-                                                <label>{item.label}</label>
-                                                <div className="kyc-info-value">{item.value}</div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {openSections.bank && (
+                                        <div className="kyc-info-grid">
+                                            {[
+                                                { label: 'Bank Name', value: selectedRequest.bank_name },
+                                                { label: 'Account Holder', value: selectedRequest.account_name },
+                                                { label: 'Account Number', value: selectedRequest.account_number },
+                                                { label: 'IFSC Code', value: selectedRequest.ifsc },
+                                            ].map((item, i) => (
+                                                <div key={i} className="kyc-info-item">
+                                                    <label>{item.label}</label>
+                                                    <div className="kyc-info-value">{item.value || 'N/A'}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Section: Documents */}
                                 <div className="kyc-section">
-                                    <h4 className="kyc-section-header">
-                                        <FileText size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
-                                        Submitted Documents
+                                    <h4 className="kyc-section-header" onClick={() => toggleSection('docs')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>
+                                            <FileText size={15} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: '#6366f1' }} />
+                                            Submitted Documents
+                                        </span>
+                                        {openSections.docs ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </h4>
-                                    <div className="kyc-docs-list">
-                                        {selectedRequest.documents.map((doc, idx) => {
-                                            return (
-                                                <div key={idx} className="doc-card">
-                                                    <div className="doc-info">
-                                                        <div className="doc-icon-box">
-                                                            <FileText size={18} />
+                                    {openSections.docs && (
+                                        <div className="kyc-docs-list">
+                                            {(selectedRequest.files || []).map((doc, idx) => {
+                                                return (
+                                                    <div key={idx} className="doc-card">
+                                                        <div className="doc-info">
+                                                            <div className="doc-icon-box">
+                                                                <FileText size={18} />
+                                                            </div>
+                                                            <div>
+                                                                <div className="doc-type">{doc.file_type.replace('_', ' ').toUpperCase()}</div>
+                                                                <div className="doc-meta">ID: {selectedRequest.aadhar_number || selectedRequest.pan_number || 'N/A'}</div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <div className="doc-type">{doc.type}</div>
-                                                            <div className="doc-meta">ID: {doc.id}</div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <div className="doc-actions">
+                                                                <button className="icon-btn-sm" title="View Document" onClick={() => window.open(doc.file_url, '_blank')}>
+                                                                    <Eye size={15} />
+                                                                </button>
+                                                                <button
+                                                                    className="icon-btn-sm"
+                                                                    title="Download Document"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const response = await fetch(doc.file_url);
+                                                                            const blob = await response.blob();
+                                                                            const url = window.URL.createObjectURL(blob);
+                                                                            const link = document.createElement('a');
+                                                                            link.href = url;
+                                                                            const filename = doc.file_url.split('/').pop() || `${doc.file_type}.dat`;
+                                                                            link.setAttribute('download', filename);
+                                                                            document.body.appendChild(link);
+                                                                            link.click();
+                                                                            link.remove();
+                                                                        } catch (err) {
+                                                                            showToast?.('Download failed. Opening in new tab instead.', 'info');
+                                                                            window.open(doc.file_url, '_blank');
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Download size={15} />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <div className="doc-actions">
-                                                            <button className="icon-btn-sm" title="View Document" onClick={() => window.open('#', '_blank')}>
-                                                                <Eye size={15} />
-                                                            </button>
-                                                            <button className="icon-btn-sm" title="Download">
-                                                                <Download size={15} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                                );
+                                            })}
+                                            {(!selectedRequest.files || selectedRequest.files.length === 0) && (
+                                                <p style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No documents uploaded yet.</p>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Rejection Notice */}
-                                    {selectedRequest.rejectionReason && (
+                                    {selectedRequest.kyc_reject_reason && openSections.docs && (
                                         <div className="rejection-notice">
                                             <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
                                             <div>
-                                                <div className="rejection-title">Previous Rejection Reason</div>
-                                                <div className="rejection-text">{selectedRequest.rejectionReason}</div>
+                                                <div className="rejection-title">Current/Previous Rejection Reason</div>
+                                                <div className="rejection-text">{selectedRequest.kyc_reject_reason}</div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Footer Actions */}
-                            {selectedRequest.status === 'Pending' && (
-                                <div className="kyc-footer">
-                                    <button className="kyc-btn-approve" onClick={() => handleApprove(selectedRequest.id)}>
-                                        <CheckCircle size={17} /> Approve KYC
-                                    </button>
-                                    <button className="kyc-btn-reject" onClick={() => handleReject(selectedRequest.id)}>
-                                        <XCircle size={17} /> Reject
-                                    </button>
-                                </div>
-                            )}
+                            {/* Footer Actions - Always Allow Changes */}
+                            <div className="kyc-footer">
+                                <button className="kyc-btn-approve" onClick={() => handleApprove(selectedRequest.id)}>
+                                    <CheckCircle size={17} /> {selectedRequest.kyc_status === 'Approved' ? 'Re-Approve' : 'Approve KYC'}
+                                </button>
+                                <button className="kyc-btn-reject" onClick={() => handleReject(selectedRequest.id)}>
+                                    <XCircle size={17} /> {selectedRequest.kyc_status === 'Rejected' ? 'Update Rejection' : 'Reject'}
+                                </button>
+                            </div>
 
-                            {selectedRequest.status !== 'Pending' && (
-                                <div className={`kyc-status-banner ${selectedRequest.status === 'Approved' ? 'banner-approved' : 'banner-rejected'}`}>
-                                    {selectedRequest.status === 'Approved'
+                            {selectedRequest.kyc_status !== 'Pending' && selectedRequest.kyc_status && (
+                                <div className={`kyc-status-banner ${selectedRequest.kyc_status === 'Approved' ? 'banner-approved' : 'banner-rejected'}`}>
+                                    {selectedRequest.kyc_status === 'Approved'
                                         ? <ShieldCheck size={20} />
                                         : <XCircle size={20} />}
-                                    This verification is {selectedRequest.status}
+                                    This verification is currently {selectedRequest.kyc_status}
                                 </div>
                             )}
                         </div>

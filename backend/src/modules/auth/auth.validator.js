@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 /* ===============================
    LOGIN
@@ -66,12 +66,4 @@ const resendOtpSchema = Joi.object({
   session_token: Joi.string().required()
 });
 
-module.exports = {
-  loginSchema,
-  verifyLoginOtpSchema,
-  refreshSchema,
-  forgotPasswordSchema,
-  verifyResetOtpSchema,
-  resetPasswordSchema,
-  resendOtpSchema
-};
+export { loginSchema, verifyLoginOtpSchema, refreshSchema, forgotPasswordSchema, verifyResetOtpSchema, resetPasswordSchema, resendOtpSchema };

@@ -1,15 +1,17 @@
-const multer = require("multer");
+import multer from 'multer';
 
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+  const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
+  const allowedDocTypes = ["application/pdf"];
+  const allowedTypes = [...allowedImageTypes, ...allowedDocTypes];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only JPG, JPEG, PNG files allowed"), false);
+    cb(new Error("Only JPG, JPEG, PNG, and PDF files allowed"), false);
   }
 
 };
@@ -22,4 +24,4 @@ const upload = multer({
   }
 });
 
-module.exports = upload;
+export default upload;

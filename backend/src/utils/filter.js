@@ -36,4 +36,4 @@ const buildFilters = (queryParams, searchableFields = []) => {
   return filters;
 };
 
-module.exports = buildFilters;
+export default buildFilters;

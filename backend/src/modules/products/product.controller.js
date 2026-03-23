@@ -1,15 +1,17 @@
-const ApiResponse = require("../../utils/apiResponse");
-const asyncHandler = require("../../utils/asyncHandler");
-const productService = require("./product.service");
+import ApiResponse from '../../utils/apiResponse.js';
+import asyncHandler from '../../utils/asyncHandler.js';
+import productService from './product.service.js';
 
-exports.createProduct = asyncHandler(async (req, res) => {
+export const createProduct = asyncHandler(async (req, res) => {
   const product = productService.createProduct(req.body);
 
   return ApiResponse.success(res, "Product created successfully", product);
 });
 
-exports.getAllProducts = asyncHandler(async (req, res) => {
+export const getAllProducts = asyncHandler(async (req, res) => {
   const products = productService.getAllProducts();
 
   return ApiResponse.success(res, "Products fetched successfully", products);
 });
+
+export default { createProduct, getAllProducts };

@@ -1,11 +1,11 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const controller = require("./category.controller");
-const validate = require("../../middlewares/validate");
-const { createCategorySchema, updateCategorySchema } = require("./category.validator");
+import controller from './category.controller.js';
+import validate from '../../middlewares/validate.js';
+import { createCategorySchema, updateCategorySchema } from './category.validator.js';
 
-const upload = require("../../middlewares/upload.middleware");
+import upload from '../../middlewares/upload.middleware.js';
 
 // GET categories
 router.get("/", controller.getCategories);
@@ -22,4 +22,4 @@ router.delete("/:id", controller.deleteCategory);
 // TOGGLE STATUS
 router.patch("/:id/status", controller.toggleStatus);
 
-module.exports = router;
+export default router;

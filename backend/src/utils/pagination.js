@@ -6,7 +6,7 @@
 /**
  * Extract pagination params from request query
  */
-const getPagination = (query) => {
+export const getPagination = (query) => {
   const page = Math.max(parseInt(query.page) || 1, 1);
   const limit = Math.max(parseInt(query.limit) || 10, 1);
 
@@ -22,7 +22,7 @@ const getPagination = (query) => {
 /**
  * Generate pagination metadata for response
  */
-const getPaginationMeta = (page, limit, totalRecords) => {
+export const getPaginationMeta = (page, limit, totalRecords) => {
   const totalPages = Math.ceil(totalRecords / limit);
 
   return {
@@ -33,9 +33,4 @@ const getPaginationMeta = (page, limit, totalRecords) => {
     hasNextPage: page < totalPages,
     hasPrevPage: page > 1
   };
-};
-
-module.exports = {
-  getPagination,
-  getPaginationMeta
 };

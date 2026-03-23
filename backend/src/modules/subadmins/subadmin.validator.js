@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 /* ===============================
    CREATE SUB ADMIN
@@ -96,8 +96,4 @@ const updatePermissionsSchema = Joi.object({
 
 
 
-module.exports = {
-  createSubAdminSchema,
-  updateSubAdminSchema,
-  updatePermissionsSchema,
-};
+export { createSubAdminSchema, updateSubAdminSchema, updatePermissionsSchema, };

@@ -15,7 +15,7 @@ const getAllProducts = () => {
   return products;
 };
 
-module.exports = {
+export default {
   createProduct,
   getAllProducts
 };

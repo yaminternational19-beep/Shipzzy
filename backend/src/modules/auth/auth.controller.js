@@ -1,13 +1,13 @@
-const ApiResponse = require("../../utils/apiResponse");
-const ApiError = require("../../utils/ApiError");
-const asyncHandler = require("../../utils/asyncHandler");
-const authService = require("./auth.service");
-const emailService = require("../../services/emailService");
+import ApiResponse from '../../utils/apiResponse.js';
+import ApiError from '../../utils/ApiError.js';
+import asyncHandler from '../../utils/asyncHandler.js';
+import authService from './auth.service.js';
+import emailService from '../../services/emailService.js';
 
 /* ===============================
    LOGIN
 ================================= */
-exports.login = asyncHandler(async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
 
   const { email, password } = req.body;
 
@@ -66,7 +66,7 @@ exports.login = asyncHandler(async (req, res) => {
    VERIFY LOGIN OTP
 ================================= */
 
-exports.verifyLoginOtp = asyncHandler(async (req, res) => {
+export const verifyLoginOtp = asyncHandler(async (req, res) => {
   const { login_token, otp } = req.body;
 
   if (!login_token || !otp) {
@@ -110,7 +110,7 @@ exports.verifyLoginOtp = asyncHandler(async (req, res) => {
    REFRESH TOKEN
 ================================= */
 
-exports.refreshToken = asyncHandler(async (req, res) => {
+export const refreshToken = asyncHandler(async (req, res) => {
 
   const { refreshToken: token } = req.body;
 
@@ -134,7 +134,7 @@ exports.refreshToken = asyncHandler(async (req, res) => {
    FORGOT PASSWORD
 ================================= */
 
-exports.forgotPassword = asyncHandler(async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
 
   const { email } = req.body;
 
@@ -174,7 +174,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
    VERIFY RESET OTP
 ================================= */
 
-exports.verifyResetOtp = asyncHandler(async (req, res) => {
+export const verifyResetOtp = asyncHandler(async (req, res) => {
 
   const { reset_token, otp } = req.body;
 
@@ -211,7 +211,7 @@ exports.verifyResetOtp = asyncHandler(async (req, res) => {
    RESET PASSWORD
 ================================= */
 
-exports.resetPassword = asyncHandler(async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
 
   const { reset_token, new_password, confirm_password } = req.body;
 
@@ -254,7 +254,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
    RESEND OTP
 ================================= */
 
-exports.resendOtp = asyncHandler(async (req, res) => {
+export const resendOtp = asyncHandler(async (req, res) => {
 
   const { session_token } = req.body;
 
@@ -297,7 +297,7 @@ exports.resendOtp = asyncHandler(async (req, res) => {
 });
 
 
-exports.logout = asyncHandler(async (req, res) => {
+export const logout = asyncHandler(async (req, res) => {
 
   const { refreshToken } = req.body;
 
@@ -314,3 +314,5 @@ exports.logout = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, "Logged out successfully");
 
 });
+
+export default { login, verifyLoginOtp, refreshToken, forgotPassword, verifyResetOtp, resetPassword, resendOtp, logout };

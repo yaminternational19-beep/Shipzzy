@@ -1,14 +1,14 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const productController = require("./product.controller");
-const { createProductSchema } = require("./product.validator");
+import productController from './product.controller.js';
+import { createProductSchema } from './product.validator.js';
 
-const validate = require("../../middlewares/validate"); // if created
+import validate from '../../middlewares/validate.js'; // if created
 
 router.post("/",validate(createProductSchema),productController.createProduct
 );
 
 router.get("/", productController.getAllProducts);
 
-module.exports = router;
+export default router;

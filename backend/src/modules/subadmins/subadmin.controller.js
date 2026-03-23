@@ -1,11 +1,11 @@
-const ApiResponse = require("../../utils/apiResponse");
-const service = require("./subadmin.service");
-const { uploadFile, deleteFile } = require("../../services/s3Service.js");
+import ApiResponse from '../../utils/apiResponse.js';
+import service from './subadmin.service.js';
+import { uploadFile, deleteFile } from '../../services/s3Service.js';
 
-const bcrypt = require("bcryptjs");
+import bcrypt from 'bcryptjs';
 
 
-exports.getSubAdmins = async (req, res) => {
+export const getSubAdmins = async (req, res) => {
   try {
     const result = await service.getSubAdmins(req.query);
     return ApiResponse.success(res, "Sub admins fetched", result);
@@ -14,7 +14,7 @@ exports.getSubAdmins = async (req, res) => {
   }
 };
 
-exports.getAccessLogs = async (req, res) => {
+export const getAccessLogs = async (req, res) => {
   try {
 
     const result = await service.getAccessLogs(req.query);
@@ -36,7 +36,7 @@ exports.getAccessLogs = async (req, res) => {
 };
 
 
-exports.createSubAdmin = async (req, res) => {
+export const createSubAdmin = async (req, res) => {
 
   try {
 
@@ -79,7 +79,7 @@ exports.createSubAdmin = async (req, res) => {
 
 };
 
-exports.updateSubAdmin = async (req, res) => {
+export const updateSubAdmin = async (req, res) => {
   try {
 
     const id = req.params.id;
@@ -152,7 +152,7 @@ exports.updateSubAdmin = async (req, res) => {
   }
 };
 
-exports.toggleStatus = async (req, res) => {
+export const toggleStatus = async (req, res) => {
   try {
 
     const result = await service.toggleStatus(req.params.id);
@@ -172,7 +172,7 @@ exports.toggleStatus = async (req, res) => {
   }
 };
 
-exports.deleteSubAdmin = async (req, res) => {
+export const deleteSubAdmin = async (req, res) => {
   try {
 
     const result = await service.deleteSubAdmin(req.params.id);
@@ -191,7 +191,7 @@ exports.deleteSubAdmin = async (req, res) => {
   }
 };
 
-exports.updatePermissions = async (req, res) => {
+export const updatePermissions = async (req, res) => {
   try {
 
     const result = await service.updatePermissions(
@@ -213,3 +213,6 @@ exports.updatePermissions = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+
+export default { getSubAdmins, getAccessLogs, createSubAdmin, updateSubAdmin, toggleStatus, deleteSubAdmin, updatePermissions };

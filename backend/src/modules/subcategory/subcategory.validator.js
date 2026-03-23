@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 /* ===============================
    CREATE SUBCATEGORY
@@ -22,7 +22,4 @@ const updateSubCategorySchema = Joi.object({
   status: Joi.string().valid("Active", "Inactive").optional()
 });
 
-module.exports = {
-  createSubCategorySchema,
-  updateSubCategorySchema
-};
+export { createSubCategorySchema, updateSubCategorySchema };

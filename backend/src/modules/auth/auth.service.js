@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const db = require("../../config/db");
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import db from '../../config/db.js';
 
 /* ===============================
    FIND USER BY EMAIL (ALL ROLES)
@@ -16,21 +16,37 @@ const getUserByEmail = async (email) => {
   if (admin.length) return admin[0];
 
   const [subadmin] = await db.query(
-    "SELECT id,name,email,password,'SUB_ADMIN' role FROM subadmins WHERE email=?",
+    "SELECT id,name,email,password,'SUB_ADMIN' role FROM sub_admins WHERE email=?",
     [email]
   );
   if (subadmin.length) return subadmin[0];
 
-  const [vendor] = await db.query(
-    "SELECT id,name,email,password,'VENDOR_OWNER' role FROM vendors WHERE email=?",
-    [email]
-  );
+  let vendor = [];
+  try {
+    const [vRows] = await db.query(
+      "SELECT id,name,email,password,'VENDOR_OWNER' role FROM vendors WHERE email=?",
+      [email]
+    );
+    vendor = vRows;
+  } catch (err) {
+    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
+    // vendors table missing: ignore and continue
+  }
+
   if (vendor.length) return vendor[0];
 
-  const [staff] = await db.query(
-    "SELECT id,name,email,password,'VENDOR_STAFF' role FROM vendor_staff WHERE email=?",
-    [email]
-  );
+  let staff = [];
+  try {
+    const [sRows] = await db.query(
+      "SELECT id,name,email,password,'VENDOR_STAFF' role FROM vendor_staff WHERE email=?",
+      [email]
+    );
+    staff = sRows;
+  } catch (err) {
+    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
+    // vendor_staff table missing: ignore and continue
+  }
+
   if (staff.length) return staff[0];
 
   return null;
@@ -191,7 +207,7 @@ const getUserById = async (id, role) => {
 
   if (role === "SUB_ADMIN") {
     const [rows] = await db.query(
-      "SELECT email FROM subadmins WHERE id=?",
+      "SELECT email FROM sub_admins WHERE id=?",
       [id]
     );
     return rows[0];
@@ -291,7 +307,7 @@ const resetPassword = async (userId, role, newPassword) => {
 
   if (role === "SUB_ADMIN") {
     await db.query(
-      "UPDATE subadmins SET password=? WHERE id=?",
+      "UPDATE sub_admins SET password=? WHERE id=?",
       [hash, userId]
     );
   }
@@ -318,7 +334,7 @@ const resetPassword = async (userId, role, newPassword) => {
    EXPORTS
 ================================= */
 
-module.exports = {
+export default {
 
   getUserByEmail,
   verifyPassword,

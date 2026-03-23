@@ -1,14 +1,12 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const controller = require("./subadmin.controller");
-const {
-  createSubAdminSchema,
+import controller from './subadmin.controller.js';
+import { createSubAdminSchema,
   updateSubAdminSchema,
-  updatePermissionsSchema,
-} = require("./subadmin.validator");
-const upload = require("../../middlewares/upload.middleware.js");
-const validate = require("../../middlewares/validate");
+  updatePermissionsSchema, } from './subadmin.validator.js';
+import upload from '../../middlewares/upload.middleware.js';
+import validate from '../../middlewares/validate.js';
 
 /* ===============================
    GET SUB ADMINS
@@ -49,5 +47,5 @@ router.patch("/:id/permissions",validate(updatePermissionsSchema),controller.upd
 
 
 
-module.exports = router;
+export default router;
 

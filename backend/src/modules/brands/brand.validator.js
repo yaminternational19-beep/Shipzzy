@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 /* ===============================
    CREATE BRAND
@@ -24,7 +24,4 @@ const updateBrandSchema = Joi.object({
   status: Joi.string().valid("Active", "Inactive").optional()
 });
 
-module.exports = {
-  createBrandSchema,
-  updateBrandSchema
-};
+export { createBrandSchema, updateBrandSchema };

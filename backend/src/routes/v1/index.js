@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-const ApiResponse = require("../../utils/apiResponse");
-const ApiError = require("../../utils/ApiError");
-const asyncHandler = require("../../utils/asyncHandler");
-const pool = require("../../config/db");
+import ApiResponse from "../../utils/apiResponse.js";
+import ApiError from "../../utils/ApiError.js";
+import asyncHandler from "../../utils/asyncHandler.js";
+import pool from "../../config/db.js";
 
 // Example route
 router.get("/health", (req, res) => {
@@ -42,31 +42,42 @@ router.get(
 
 
 
-const productRoutes = require("../../modules/products/product.routes");
+import productRoutes from '../../modules/products/product.routes.js';
 
 router.use("/products", productRoutes);
 
 
-const authRoutes = require("../../modules/auth/auth.routes");
+import authRoutes from '../../modules/auth/auth.routes.js';
 
 router.use("/auth", authRoutes);
 
-const subadmins = require("../../modules/subadmins/subadmin.routes");
+import subadmins from '../../modules/subadmins/subadmin.routes.js';
 
 router.use("/subadmin", subadmins);
 
-const categoryRoutes = require("../../modules/categories/category.routes");
+import categoryRoutes from '../../modules/categories/category.routes.js';
 
 router.use("/categories", categoryRoutes);
 
 
-const subCategoryRoutes = require("../../modules/subcategory/subcategory.routes");
+import subCategoryRoutes from '../../modules/subcategory/subcategory.routes.js';
 
 router.use("/subcategories", subCategoryRoutes);
 
 
-const brandRoutes = require("../../modules/brands/brand.routes");
+import brandRoutes from '../../modules/brands/brand.routes.js';
 
 router.use("/brands", brandRoutes);
 
-module.exports = router;
+
+import tierRoutes from '../../modules/tiers/tier.routes.js';
+
+router.use("/tiers", tierRoutes);
+
+
+import vendorRoutes from '../../modules/vendor/vendor.routes.js';
+
+router.use("/vendors", vendorRoutes);
+
+
+export default router;

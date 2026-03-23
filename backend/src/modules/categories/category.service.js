@@ -1,7 +1,7 @@
-// const Category = require("../../models/category.model");
-const s3Service = require("../../services/s3Service");
-const db = require("../../config/db");
-const { getPagination, getPaginationMeta } = require("../../utils/pagination");
+// import Category from '../../models/category.model.js';
+import s3Service from '../../services/s3Service.js';
+import db from '../../config/db.js';
+import { getPagination, getPaginationMeta } from '../../utils/pagination.js';
 
 
 
@@ -325,7 +325,7 @@ const deleteCategory = async (id) => {
 
 
 
-module.exports = {
+export default {
   getCategories,
   createCategory,
   updateCategory,

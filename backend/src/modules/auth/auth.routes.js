@@ -1,9 +1,9 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const authController = require("./auth.controller");
-const { loginSchema, verifyLoginOtpSchema, forgotPasswordSchema, resetPasswordSchema, resendOtpSchema, refreshSchema, verifyResetOtpSchema } = require("./auth.validator");
-const validate = require("../../middlewares/validate");
+import authController from './auth.controller.js';
+import { loginSchema, verifyLoginOtpSchema, forgotPasswordSchema, resetPasswordSchema, resendOtpSchema, refreshSchema, verifyResetOtpSchema } from './auth.validator.js';
+import validate from '../../middlewares/validate.js';
 
 router.post("/login", validate(loginSchema), authController.login);
 router.post("/verify-otp", validate(verifyLoginOtpSchema), authController.verifyLoginOtp);
@@ -13,4 +13,4 @@ router.post("/verify-reset-otp", validate(verifyResetOtpSchema), authController.
 router.post("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
 router.post("/resend-otp", validate(resendOtpSchema), authController.resendOtp);
 router.post("/logout", validate(refreshSchema), authController.logout);
-module.exports = router;
+export default router;

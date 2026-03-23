@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+import bcrypt from 'bcrypt';
 
 const password = "Superadmin@123"; // change this to your password
 const saltRounds = 10;

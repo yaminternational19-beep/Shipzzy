@@ -1,4 +1,4 @@
-const Joi = require("joi");
+import Joi from 'joi';
 
 /* ===============================
    CREATE CATEGORY
@@ -20,7 +20,4 @@ const updateCategorySchema = Joi.object({
   status: Joi.string().valid("Active", "Inactive").optional()
 });
 
-module.exports = {
-  createCategorySchema,
-  updateCategorySchema
-};
+export { createCategorySchema, updateCategorySchema };

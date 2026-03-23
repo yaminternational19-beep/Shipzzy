@@ -1,12 +1,12 @@
-const express = require("express");
+import express from 'express';
 const router = express.Router();
 
-const controller = require("./brand.controller");
-const validate = require("../../middlewares/validate");
+import controller from './brand.controller.js';
+import validate from '../../middlewares/validate.js';
 
-const {createBrandSchema,updateBrandSchema} = require("./brand.validator");
+import { createBrandSchema,updateBrandSchema } from './brand.validator.js';
 
-const upload = require("../../middlewares/upload.middleware");
+import upload from '../../middlewares/upload.middleware.js';
 
 /* ===============================
    GET BRANDS
@@ -38,4 +38,4 @@ router.delete("/:id", controller.deleteBrand);
 
 router.patch("/:id/status", controller.toggleStatus);
 
-module.exports = router;
+export default router;

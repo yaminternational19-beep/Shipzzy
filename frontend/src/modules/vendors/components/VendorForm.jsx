@@ -2,74 +2,86 @@ import React, { useState, useEffect } from 'react';
 import {
     Upload, X, Check, ArrowRight, ArrowLeft, Store,
     MapPin, CreditCard, FileText, Camera, User,
-    Mail, Lock, Smartphone, ShieldAlert, Globe,
-    Building2, FileCheck, Hash, Eye, Trash2, Award
+    Mail, Lock, Globe, Building2, FileCheck, Hash,
+    Eye, EyeOff, Trash2, Award
 } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { getCategoriesApi } from '../../../api/categories.api';
+import { getTiersApi } from '../../../api/tier.api';
+import { createVendorApi, updateVendorApi } from '../../../api/vendor.api';
 
 const VendorForm = ({ onCancel, onSave, initialData }) => {
+    // Helper to find file by type
+    const getFileUrl = (type) => {
+        if (!initialData?.files) return null;
+        const file = initialData.files.find(f => f.file_type === type);
+        return file ? file.file_url : null;
+    };
+
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        businessName: initialData?.name || initialData?.businessName || '',
-        category: initialData?.category || [], // multiple categories
-        fullName: initialData?.fullName || '',
+        businessName: initialData?.business_name || initialData?.businessName || '',
+        category: initialData?.business_categories || initialData?.category || [], // multiple categories
+        fullName: initialData?.owner_name || initialData?.fullName || '',
         email: initialData?.email || '',
-        password: initialData?.password || '',
-        countryCode: initialData?.countryCode || '+91',
+        password: '', // Password usually blank on edit
+        countryCode: initialData?.country_code || initialData?.countryCode || '+91',
         mobile: initialData?.mobile || '',
-        emergencyCountryCode: initialData?.emergencyCountryCode || '+91',
-        emergencyMobile: initialData?.emergencyMobile || '',
-        profilePhoto: initialData?.profilePhoto || null,
+        emergencyCountryCode: initialData?.emergency_country_code || initialData?.emergencyCountryCode || '+91',
+        emergencyMobile: initialData?.emergency_mobile || initialData?.emergencyMobile || '',
+        profilePhoto: getFileUrl('profile_photo') || initialData?.profile_photo || initialData?.profilePhoto || null,
         photoFile: null,
 
         // Address
         address: initialData?.address || '',
         country: initialData?.country || 'India',
-        countryIso: initialData?.countryIso || 'IN',
+        countryIso: initialData?.country_iso || initialData?.countryIso || 'IN',
         state: initialData?.state || '',
-        stateIso: initialData?.stateIso || '',
+        stateIso: initialData?.state_iso || initialData?.stateIso || '',
         city: initialData?.city || '',
         pincode: initialData?.pincode || '',
         latitude: initialData?.latitude || '',
         longitude: initialData?.longitude || '',
 
-        // Personal IDs (Added)
-        aadharNumber: initialData?.aadharNumber || '',
-        aadharDoc: initialData?.aadharDoc || null,
+        // Personal IDs
+        aadharNumber: initialData?.aadhar_number || initialData?.aadharNumber || '',
+        aadharDoc: getFileUrl('aadhar_doc') || initialData?.aadharDoc || null,
         aadharDocFile: null,
-        panNumber: initialData?.panNumber || '',
-        panDoc: initialData?.panDoc || null,
+        panNumber: initialData?.pan_number || initialData?.panNumber || '',
+        panDoc: getFileUrl('pan_doc') || initialData?.panDoc || null,
         panDocFile: null,
 
-        // Business IDs (Updated)
-        licenseNumber: initialData?.licenseNumber || '',
-        licenseDoc: initialData?.licenseDoc || null,
+        // Business IDs
+        licenseNumber: initialData?.license_number || initialData?.licenseNumber || '',
+        licenseDoc: getFileUrl('license_doc') || initialData?.licenseDoc || null,
         licenseDocFile: null,
-        fassiCode: initialData?.fassiCode || '',
-        fassiDoc: initialData?.fassiDoc || null,
+        fassiCode: initialData?.fassi_code || initialData?.fassiCode || '',
+        fassiDoc: getFileUrl('fassi_doc') || initialData?.fassiDoc || null,
         fassiDocFile: null,
-        gstNumber: initialData?.gstNumber || '',
-        gstDoc: initialData?.gstDoc || null,
+        gstNumber: initialData?.gst_number || initialData?.gstNumber || '',
+        gstDoc: getFileUrl('gst_doc') || initialData?.gstDoc || null,
         gstDocFile: null,
 
         // Bank Details
-        bankName: initialData?.bankName || '',
-        accountName: initialData?.accountName || '',
-        accountNumber: initialData?.accountNumber || '',
+        bankName: initialData?.bank_name || initialData?.bankName || '',
+        accountName: initialData?.account_name || initialData?.accountName || '',
+        accountNumber: initialData?.account_number || initialData?.accountNumber || '',
         ifsc: initialData?.ifsc || '',
 
-        // Tier & ID (Updated)
-        tier: initialData?.tier || 'Silver',
-        vendorId: initialData?.id || initialData?.vendorId || '',
-        expectedTurnover: initialData?.turnover || ''
+        // Tier & ID
+        tier: initialData?.tier_id || initialData?.tier || '',
+        vendorId: initialData?.vendor_code || initialData?.vendorId || '',
+        expectedTurnover: initialData?.total_turnover || initialData?.turnover || ''
     });
 
     const [states, setStates] = useState([]);
     const [availableCategories, setAvailableCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
+    const [availableTiers, setAvailableTiers] = useState([]);
+    const [showPassword, setShowPassword] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         if (formData.countryIso) {
@@ -91,7 +103,22 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                 setLoadingCategories(false);
             }
         };
+
+        const fetchTiers = async () => {
+            try {
+                const response = await getTiersApi({ is_active: true });
+                if (response.data.success) {
+                    const tiersData = response.data.data;
+                    // API returns a direct array (not wrapped in .tiers/.records)
+                    setAvailableTiers(Array.isArray(tiersData) ? tiersData : (tiersData.tiers || tiersData.records || []));
+                }
+            } catch (error) {
+                console.error('Error fetching tiers:', error);
+            }
+        };
+
         fetchCategories();
+        fetchTiers();
     }, []);
 
     const handlePhotoUpload = (e) => {
@@ -230,8 +257,9 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                                     <input
                                         type="text"
                                         value={formData.vendorId}
-                                        onChange={(e) => updateField('vendorId', e.target.value)}
-                                        placeholder="e.g. VND001"
+                                        readOnly
+                                        style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
+                                        placeholder="Auto-generated ID"
                                     />
                                 </div>
                             </div>
@@ -264,11 +292,32 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                                 <div className="input-with-icon">
                                     <Lock size={18} className="field-icon" />
                                     <input
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         value={formData.password}
                                         onChange={(e) => updateField('password', e.target.value)}
-                                        placeholder="********"
+                                        placeholder={initialData?.id ? "Leave blank to keep current" : "Min. 6 characters"}
+                                        style={{ paddingRight: '40px' }}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(p => !p)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '2px'
+                                        }}
+                                        title={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
                                 </div>
                             </div>
                             <div className="form-group">
@@ -329,9 +378,16 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                                             fontSize: '0.9rem'
                                         }}
                                     >
-                                        <option value="Silver">Silver</option>
-                                        <option value="Gold">Gold</option>
-                                        <option value="Platinum">Platinum</option>
+                                        <option value="">Select a Tier</option>
+                                        {availableTiers.length > 0 ? (
+                                            availableTiers.map(tier => (
+                                                <option key={tier.id} value={tier.id}>
+                                                    {tier.tier_name}
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option disabled>Loading tiers...</option>
+                                        )}
                                     </select>
                                 </div>
                             </div>
@@ -511,7 +567,7 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                                             minHeight: '58px'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                                                {formData.aadharDocFile?.type.includes('image') ? (
+                                                {(formData.aadharDocFile?.type.includes('image') || (typeof formData.aadharDoc === 'string' && /\.(jpg|jpeg|png|webp|svg)$/i.test(formData.aadharDoc))) ? (
                                                     <img src={formData.aadharDoc} alt="Aadhar" style={{ width: '42px', height: '42px', borderRadius: '6px', objectFit: 'cover' }} />
                                                 ) : (
                                                     <div style={{ width: '42px', height: '42px', background: '#fee2e2', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -580,7 +636,7 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                                             minHeight: '58px'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                                                {formData.panDocFile?.type.includes('image') ? (
+                                                {(formData.panDocFile?.type.includes('image') || (typeof formData.panDoc === 'string' && /\.(jpg|jpeg|png|webp|svg)$/i.test(formData.panDoc))) ? (
                                                     <img src={formData.panDoc} alt="PAN" style={{ width: '42px', height: '42px', borderRadius: '6px', objectFit: 'cover' }} />
                                                 ) : (
                                                     <div style={{ width: '42px', height: '42px', background: '#fee2e2', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -799,8 +855,10 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
             <div className="card vendor-form-huge-standard" style={{ padding: 0 }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <h3 style={{ margin: 0 }}>Register New Vendor</h3>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>Complete all steps to onboard the partner</p>
+                        <h3 style={{ margin: 0 }}>{initialData?.id ? 'Edit Vendor' : 'Register New Vendor'}</h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+                            {initialData?.id ? 'Update existing vendor information' : 'Complete all steps to onboard the partner'}
+                        </p>
                     </div>
                     <button className="icon-btn-sm" onClick={onCancel}><X size={20} /></button>
                 </div>
@@ -844,10 +902,63 @@ const VendorForm = ({ onCancel, onSave, initialData }) => {
                     ) : (
                         <button
                             className="btn btn-primary"
-                            onClick={() => onSave?.(formData)}
+                            disabled={submitting}
+                            onClick={async () => {
+                                setSubmitting(true);
+                                try {
+                                    const fd = new FormData();
+                                    fd.append('business_name', formData.businessName);
+                                    fd.append('owner_name', formData.fullName);
+                                    fd.append('email', formData.email);
+                                    fd.append('password', formData.password);
+                                    fd.append('country_code', formData.countryCode);
+                                    fd.append('mobile', formData.mobile);
+                                    fd.append('emergency_country_code', formData.emergencyCountryCode || '');
+                                    fd.append('emergency_mobile', formData.emergencyMobile || '');
+                                    fd.append('business_categories', JSON.stringify(formData.category));
+                                    fd.append('tier_id', formData.tier);
+                                    fd.append('address', formData.address);
+                                    fd.append('country', formData.country);
+                                    fd.append('country_iso', formData.countryIso);
+                                    fd.append('state', formData.state);
+                                    fd.append('state_iso', formData.stateIso);
+                                    fd.append('city', formData.city);
+                                    fd.append('pincode', formData.pincode);
+                                    fd.append('latitude', formData.latitude || '');
+                                    fd.append('longitude', formData.longitude || '');
+                                    fd.append('aadhar_number', formData.aadharNumber);
+                                    fd.append('pan_number', formData.panNumber);
+                                    fd.append('license_number', formData.licenseNumber || '');
+                                    fd.append('fassi_code', formData.fassiCode || '');
+                                    fd.append('gst_number', formData.gstNumber || '');
+                                    fd.append('bank_name', formData.bankName);
+                                    fd.append('account_name', formData.accountName);
+                                    fd.append('account_number', formData.accountNumber);
+                                    fd.append('ifsc', formData.ifsc);
+                                    fd.append('total_turnover', formData.expectedTurnover || 0);
+                                    if (formData.photoFile) fd.append('profile_photo', formData.photoFile);
+                                    if (formData.aadharDocFile) fd.append('aadhar_doc', formData.aadharDocFile);
+                                    if (formData.panDocFile) fd.append('pan_doc', formData.panDocFile);
+                                    if (formData.licenseDocFile) fd.append('license_doc', formData.licenseDocFile);
+                                    if (formData.fassiDocFile) fd.append('fassi_doc', formData.fassiDocFile);
+                                    if (formData.gstDocFile) fd.append('gst_doc', formData.gstDocFile);
+
+                                    if (initialData?.id) {
+                                        await updateVendorApi(initialData.id, fd);
+                                    } else {
+                                        await createVendorApi(fd);
+                                    }
+                                    onSave?.(formData);
+                                } catch (err) {
+                                    alert(err?.response?.data?.message || 'Failed to save vendor. Please check all fields.');
+                                } finally {
+                                    setSubmitting(false);
+                                }
+                            }}
                             style={{ background: 'linear-gradient(135deg,#10b981,#059669)', border: 'none' }}
                         >
-                            Finish Registration <Check size={16} />
+                            {submitting ? 'Saving...' : initialData?.id ? 'Update Vendor' : 'Finish Registration'}
+                            {!submitting && <Check size={16} />}
                         </button>
                     )}
                 </div>

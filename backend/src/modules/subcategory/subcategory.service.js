@@ -1,6 +1,6 @@
-const s3Service = require("../../services/s3Service");
-const db = require("../../config/db");
-const { getPagination, getPaginationMeta } = require("../../utils/pagination");
+import s3Service from '../../services/s3Service.js';
+import db from '../../config/db.js';
+import { getPagination, getPaginationMeta } from '../../utils/pagination.js';
 
 /* ===============================
    CREATE SUBCATEGORY
@@ -296,7 +296,7 @@ const deleteSubCategory = async (id) => {
 };
 
 
-module.exports = {
+export default {
   createSubCategory,
   getSubCategories,
   updateSubCategory,

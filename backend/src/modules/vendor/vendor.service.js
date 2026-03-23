@@ -1,141 +1,282 @@
-const { getPagination, getPaginationMeta } = require("../../utils/pagination");
-const buildFilters = require("../../utils/filter");
-const db = require("../../config/db");
-
+import db from '../../config/db.js';
+import bcrypt from 'bcrypt';
+import s3Service from '../../services/s3Service.js';
+import { getPagination, getPaginationMeta } from '../../utils/pagination.js';
 
 /* ===============================
-   GET VENDORS
+   HELPER: GENERATE VENDOR CODE
 ================================= */
 
-const getVendors = async (queryParams) => {
+const generateVendorCode = async () => {
+    const [last] = await db.query(
+        `SELECT vendor_code FROM vendors ORDER BY id DESC LIMIT 1`
+    );
 
-  const { page, limit, skip } = getPagination(queryParams);
+    let newCode = "VND0001";
 
-  const filters = buildFilters(queryParams, [
-    "business_name",
-    "email",
-    "mobile"
-  ]);
+    if (last.length > 0 && last[0].vendor_code) {
+        const lastNumber = parseInt(last[0].vendor_code.replace("VND", ""));
+        newCode = `VND${String(lastNumber + 1).padStart(4, "0")}`;
+    }
 
-  let where = [];
-  let values = [];
+    return newCode;
+};
 
-  /* STATUS FILTER */
-  if (filters.status) {
-    where.push("v.status = ?");
-    values.push(filters.status);
-  }
+/* ===============================
+   CREATE VENDOR
+================================= */
 
-  /* TIER FILTER */
-  if (filters.tier) {
-    where.push("v.tier = ?");
-    values.push(filters.tier);
-  }
+const createVendor = async (data, files) => {
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
 
-  /* SEARCH FILTER */
-  if (filters.$or) {
+    try {
+        // 1. Hash Password
+        const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const searchConditions = filters.$or.map(condition => {
+        // 2. Fetch Commission Percent from Tier
+        const [tierRows] = await connection.query(
+            "SELECT commission_percent FROM tiers WHERE id = ?",
+            [data.tier_id]
+        );
 
-      const key = Object.keys(condition)[0];
-      const value = condition[key].$regex;
+        if (tierRows.length === 0) {
+            throw new Error("Invalid Tier ID");
+        }
 
-      values.push(`%${value}%`);
+        const commissionPercent = tierRows[0].commission_percent;
 
-      return `v.${key} LIKE ?`;
+        // 3. Generate Vendor Code
+        const vendorCode = await generateVendorCode();
 
-    });
+        // 4. Insert Vendor basic data
+        const vendorQuery = `
+            INSERT INTO vendors (
+                vendor_code, business_name, owner_name, email, password,
+                country_code, mobile, emergency_country_code, emergency_mobile,
+                business_categories, tier_id, commission_percent, address,
+                country, country_iso, state, state_iso, city, pincode,
+                latitude, longitude, aadhar_number, pan_number,
+                license_number, fassi_code, gst_number, bank_name,
+                account_name, account_number, ifsc, is_verified, status,
+                total_turnover
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-    where.push(`(${searchConditions.join(" OR ")})`);
+        const vendorValues = [
+            vendorCode, data.business_name, data.owner_name, data.email, hashedPassword,
+            data.country_code, data.mobile, data.emergency_country_code || null, data.emergency_mobile || null,
+            data.business_categories, data.tier_id, commissionPercent, data.address,
+            data.country, data.country_iso, data.state, data.state_iso, data.city, data.pincode,
+            data.latitude || null, data.longitude || null, data.aadhar_number, data.pan_number,
+            data.license_number || null, data.fassi_code || null, data.gst_number || null, data.bank_name,
+            data.account_name, data.account_number, data.ifsc, false, 'Inactive',
+            data.total_turnover || 0
+        ];
 
-  }
+        const [vendorResult] = await connection.query(vendorQuery, vendorValues);
+        const vendorId = vendorResult.insertId;
 
-  const whereClause = where.length
-    ? `WHERE ${where.join(" AND ")}`
-    : "";
+        // 5. Handle File Uploads
+        let profilePhotoUrl = null;
+        const fileRecords = [];
 
-  /* GET RECORDS */
+        if (files) {
+            const fileTypes = [
+                'profile_photo', 'aadhar_doc', 'pan_doc', 
+                'license_doc', 'fassi_doc', 'gst_doc'
+            ];
 
-  const [records] = await db.query(
-    `
-    SELECT
-      v.*,
-      vf.profile_photo
-    FROM vendors v
-    LEFT JOIN vendor_files vf
-      ON v.id = vf.vendor_id
-    ${whereClause}
-    ORDER BY v.created_at DESC
-    LIMIT ? OFFSET ?
-    `,
-    [...values, limit, skip]
-  );
+            for (const type of fileTypes) {
+                if (files[type] && files[type][0]) {
+                    const file = files[type][0];
+                    const folder = `vendor/${vendorId}/${type}`;
+                    const upload = await s3Service.uploadFile(file, folder);
 
-  /* TOTAL COUNT */
+                    if (type === 'profile_photo') {
+                        profilePhotoUrl = upload.url;
+                    } else {
+                        fileRecords.push([vendorId, type, upload.url]);
+                    }
+                }
+            }
+        }
 
-  const [countResult] = await db.query(
-    `SELECT COUNT(*) as total FROM vendors v ${whereClause}`,
-    values
-  );
+        // 6. Update vendors with profile_photo and Insert vendor_files
+        if (profilePhotoUrl) {
+            await connection.query(
+                "UPDATE vendors SET profile_photo = ? WHERE id = ?",
+                [profilePhotoUrl, vendorId]
+            );
+            fileRecords.push([vendorId, 'profile_photo', profilePhotoUrl]);
+        }
 
-  const totalRecords = countResult[0].total;
+        if (fileRecords.length > 0) {
+            await connection.query(
+                "INSERT INTO vendor_files (vendor_id, file_type, file_url) VALUES ?",
+                [fileRecords]
+            );
+        }
 
-  const pagination = getPaginationMeta(page, limit, totalRecords);
+        await connection.commit();
+        connection.release();
 
-  const formattedRecords = records.map(vendor => ({
+        return { id: vendorId, vendor_code: vendorCode, email: data.email };
 
-    id: vendor.id,
+    } catch (error) {
+        await connection.rollback();
+        connection.release();
+        throw error;
+    }
+};
 
-    businessName: vendor.business_name,
-    fullName: vendor.full_name,
-    email: vendor.email,
+/* ===============================
+   GET ALL VENDORS
+================================= */
 
-    countryCode: vendor.country_code,
-    mobile: vendor.mobile,
+const getAllVendors = async (queryParams) => {
+    const { page, limit, skip } = getPagination(queryParams);
+    const fetchAll = queryParams.all === 'true'; // skip pagination if ?all=true
 
-    contactNo: `${vendor.country_code} ${vendor.mobile}`,
+    let where = [];
+    let values = [];
 
-    category: vendor.category
-      ? JSON.parse(vendor.category)
-      : [],
+    if (queryParams.status) {
+        where.push("v.status = ?");
+        values.push(queryParams.status);
+    }
 
-    address: vendor.address,
-    city: vendor.city,
-    state: vendor.state,
-    country: vendor.country,
-    pincode: vendor.pincode,
+    if (queryParams.kyc_status) {
+        where.push("v.kyc_status = ?");
+        values.push(queryParams.kyc_status);
+    }
 
-    fullAddress: `${vendor.address}, ${vendor.city}, ${vendor.state}`,
+    if (queryParams.search) {
+        where.push("(v.business_name LIKE ? OR v.owner_name LIKE ? OR v.vendor_code LIKE ? OR v.email LIKE ? OR v.mobile LIKE ?)");
+        const searchVal = `%${queryParams.search}%`;
+        values.push(searchVal, searchVal, searchVal, searchVal, searchVal);
+    }
 
-    tier: vendor.tier,
-    expectedTurnover: vendor.expected_turnover,
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
-    status: vendor.status,
+    // Total Count for Pagination
+    const [countResult] = await db.query(
+        `SELECT COUNT(*) as total FROM vendors v ${whereClause}`,
+        values
+    );
+    const totalRecords = countResult[0].total;
 
-    profilePhoto: vendor.profile_photo,
+    // Build query — all fields + tier info
+    const selectQuery = `
+        SELECT 
+            v.id,
+            v.vendor_code,
+            v.business_name,
+            v.owner_name,
+            v.email,
+            v.country_code,
+            v.mobile,
+            v.emergency_country_code,
+            v.emergency_mobile,
+            v.business_categories,
+            v.tier_id,
+            v.commission_percent,
+            v.total_turnover,
+            v.address,
+            v.country,
+            v.country_iso,
+            v.state,
+            v.state_iso,
+            v.city,
+            v.pincode,
+            v.latitude,
+            v.longitude,
+            v.aadhar_number,
+            v.pan_number,
+            v.license_number,
+            v.fassi_code,
+            v.gst_number,
+            v.bank_name,
+            v.account_name,
+            v.account_number,
+            v.ifsc,
+            v.profile_photo,
+            v.is_verified,
+            v.status,
+            v.kyc_status,
+            v.kyc_reject_reason,
+            v.kyc_verified_at,
+            v.created_by,
+            v.last_login,
+            v.created_at,
+            v.updated_at,
+            t.tier_name,
+            t.tier_key,
+            t.tier_order,
+            t.color_code        AS tier_color,
+            t.badge_color       AS tier_badge_color,
+            t.payment_cycle     AS tier_payment_cycle,
+            t.priority_listing  AS tier_priority_listing
+        FROM vendors v
+        LEFT JOIN tiers t ON v.tier_id = t.id
+        ${whereClause}
+        ORDER BY v.created_at DESC
+        ${fetchAll ? '' : 'LIMIT ? OFFSET ?'}
+    `;
 
-    createdAt: vendor.created_at
+    const queryValues = fetchAll ? values : [...values, limit, skip];
+    const [rows] = await db.query(selectQuery, queryValues);
 
-  }));
+    // Attach all vendor_files as a files[] array on each vendor
+    if (rows.length > 0) {
+        const vendorIds = rows.map(v => v.id);
+        const [allFiles] = await db.query(
+            `SELECT id, vendor_id, file_type, file_url, created_at
+             FROM vendor_files
+             WHERE vendor_id IN (?)`,
+            [vendorIds]
+        );
 
+        // Group files by vendor_id
+        const filesMap = {};
+        for (const file of allFiles) {
+            if (!filesMap[file.vendor_id]) filesMap[file.vendor_id] = [];
+            filesMap[file.vendor_id].push(file);
+        }
 
-  /* STATS */
+        rows.forEach(v => { v.files = filesMap[v.id] || []; });
+    }
 
-  const [stats] = await db.query(`
-    SELECT
-      COUNT(*) as total,
-      SUM(status='Active') as active,
-      SUM(status='Inactive') as inactive,
-      COUNT(DISTINCT tier) as tiers
-    FROM vendors
-  `);
+    const pagination = getPaginationMeta(page, limit, totalRecords);
 
-  return {
-    stats: stats[0],
-    records: formattedRecords,
-    pagination
-  };
+    // Stats
+    const [statsResult] = await db.query(`
+        SELECT 
+            COUNT(*) as total,
+            SUM(IF(status = 'Active', 1, 0)) as active,
+            SUM(IF(status = 'Inactive', 1, 0)) as inactive,
+            SUM(IF(kyc_status = 'Pending', 1, 0)) as kyc_pending,
+            SUM(IF(kyc_status = 'Approved', 1, 0)) as kyc_approved,
+            SUM(IF(kyc_status = 'Rejected', 1, 0)) as kyc_rejected
+        FROM vendors
+    `);
 
+    const stats = {
+        totalVendors: statsResult[0].total || 0,
+        activeVendors: statsResult[0].active || 0,
+        inactiveVendors: statsResult[0].inactive || 0,
+        kycStats: {
+            pending: statsResult[0].kyc_pending || 0,
+            approved: statsResult[0].kyc_approved || 0,
+            rejected: statsResult[0].kyc_rejected || 0
+        }
+    };
+
+    return {
+        records: rows,
+        pagination: fetchAll ? null : pagination,
+        stats
+    };
 };
 
 
@@ -144,303 +285,232 @@ const getVendors = async (queryParams) => {
 ================================= */
 
 const getVendorById = async (id) => {
+    const [vendorRows] = await db.query(`
+        SELECT 
+            v.*, t.tier_name 
+        FROM vendors v 
+        LEFT JOIN tiers t ON v.tier_id = t.id 
+        WHERE v.id = ?
+    `, [id]);
 
-  const [rows] = await db.query(
-    `
-    SELECT
-      v.*,
-      vf.*
-    FROM vendors v
-    LEFT JOIN vendor_files vf
-      ON v.id = vf.vendor_id
-    WHERE v.id = ?
-    `,
-    [id]
-  );
+    if (vendorRows.length === 0) {
+        throw new Error("Vendor not found");
+    }
 
-  return rows[0] || null;
+    const [fileRows] = await db.query(
+        "SELECT id, file_type, file_url FROM vendor_files WHERE vendor_id = ?",
+        [id]
+    );
 
+    const vendor = vendorRows[0];
+    vendor.files = fileRows;
+
+    return vendor;
 };
-
-
-/* ===============================
-   CREATE VENDOR
-================================= */
-
-const createVendor = async (data) => {
-
-  /* EMAIL CHECK */
-
-  const [emailExists] = await db.execute(
-    "SELECT id FROM vendors WHERE email = ?",
-    [data.email]
-  );
-
-  if (emailExists.length) {
-    throw new Error("Email already exists");
-  }
-
-  /* MOBILE CHECK */
-
-  const [mobileExists] = await db.execute(
-    "SELECT id FROM vendors WHERE mobile = ?",
-    [data.mobile]
-  );
-
-  if (mobileExists.length) {
-    throw new Error("Mobile number already exists");
-  }
-
-  /* INSERT VENDOR */
-
-  const vendorQuery = `
-    INSERT INTO vendors (
-      business_name,
-      full_name,
-      email,
-      country_code,
-      mobile,
-      category,
-      address,
-      city,
-      state,
-      country,
-      pincode,
-      tier,
-      expected_turnover,
-      status
-    )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-  `;
-
-  const vendorValues = [
-
-    data.businessName,
-    data.fullName,
-    data.email,
-
-    data.countryCode,
-    data.mobile,
-
-    JSON.stringify(data.category || []),
-
-    data.address,
-    data.city,
-    data.state,
-    data.country,
-    data.pincode,
-
-    data.tier,
-    data.expectedTurnover,
-
-    data.status || "Active"
-
-  ];
-
-  const [vendorResult] = await db.execute(
-    vendorQuery,
-    vendorValues
-  );
-
-  const vendorId = vendorResult.insertId;
-
-  /* INSERT FILES */
-
-  const files = data.files || {};
-
-  await db.execute(
-    `
-    INSERT INTO vendor_files (
-      vendor_id,
-      profile_photo,
-      profile_photo_key,
-      aadhar_doc,
-      aadhar_doc_key,
-      pan_doc,
-      pan_doc_key,
-      license_doc,
-      license_doc_key,
-      fassi_doc,
-      fassi_doc_key,
-      gst_doc,
-      gst_doc_key
-    )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `,
-    [
-      vendorId,
-
-      files.profilePhoto || null,
-      files.profilePhotoKey || null,
-
-      files.aadharDoc || null,
-      files.aadharDocKey || null,
-
-      files.panDoc || null,
-      files.panDocKey || null,
-
-      files.licenseDoc || null,
-      files.licenseDocKey || null,
-
-      files.fassiDoc || null,
-      files.fassiDocKey || null,
-
-      files.gstDoc || null,
-      files.gstDocKey || null
-    ]
-  );
-
-  return {
-    id: vendorId,
-    businessName: data.businessName,
-    email: data.email,
-    mobile: data.mobile
-  };
-
-};
-
 
 /* ===============================
    UPDATE VENDOR
 ================================= */
 
-const updateVendor = async (id, data) => {
+const updateVendor = async (id, data, files) => {
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
 
-  const query = `
-  UPDATE vendors
-  SET
-    business_name = ?,
-    full_name = ?,
-    email = ?,
-    country_code = ?,
-    mobile = ?,
-    category = ?,
-    address = ?,
-    city = ?,
-    state = ?,
-    country = ?,
-    pincode = ?,
-    tier = ?,
-    expected_turnover = ?,
-    status = ?
-  WHERE id = ?
-  `;
+    try {
+        const [existingVendorRows] = await connection.query(
+            "SELECT profile_photo FROM vendors WHERE id = ?",
+            [id]
+        );
 
-  const values = [
+        if (existingVendorRows.length === 0) {
+            throw new Error("Vendor not found");
+        }
 
-    data.businessName,
-    data.fullName,
-    data.email,
+        const existingVendor = existingVendorRows[0];
 
-    data.countryCode,
-    data.mobile,
+        // 1. Prepare fields to update
+        let updateFields = [];
+        let updateValues = [];
 
-    JSON.stringify(data.category || []),
+        const fields = [
+            'business_name', 'owner_name', 'email', 'mobile',
+            'country_code', 'emergency_country_code', 'emergency_mobile',
+            'business_categories', 'tier_id', 'address', 'country',
+            'country_iso', 'state', 'state_iso', 'city', 'pincode',
+            'latitude', 'longitude', 'aadhar_number', 'pan_number',
+            'license_number', 'fassi_code', 'gst_number', 'bank_name',
+            'account_name', 'account_number', 'ifsc', 'total_turnover'
+        ];
 
-    data.address,
-    data.city,
-    data.state,
-    data.country,
-    data.pincode,
+        for (const field of fields) {
+            if (data[field] !== undefined) {
+                updateFields.push(`${field} = ?`);
+                updateValues.push(data[field]);
+            }
+        }
 
-    data.tier,
-    data.expectedTurnover,
-    data.status,
+        // 2. Handle tier_id change -> update commission_percent
+        if (data.tier_id) {
+            const [tierRows] = await connection.query(
+                "SELECT commission_percent FROM tiers WHERE id = ?",
+                [data.tier_id]
+            );
+            if (tierRows.length > 0) {
+                updateFields.push("commission_percent = ?");
+                updateValues.push(tierRows[0].commission_percent);
+            }
+        }
 
-    id
-  ];
+        // 3. Handle password update
+        if (data.password && data.password.trim() !== '') {
+            const hashedPassword = await bcrypt.hash(data.password, 10);
+            updateFields.push("password = ?");
+            updateValues.push(hashedPassword);
+        }
 
-  await db.execute(query, values);
+        // 4. Handle File Updates
+        if (files) {
+            const fileTypes = [
+                'profile_photo', 'aadhar_doc', 'pan_doc', 
+                'license_doc', 'fassi_doc', 'gst_doc'
+            ];
 
-  return {
-    id,
-    businessName: data.businessName,
-    email: data.email
-  };
+            for (const type of fileTypes) {
+                if (files[type] && files[type][0]) {
+                    const file = files[type][0];
+                    const folder = `vendor/${id}/${type}`;
 
+                    // Update File (Profile Photo or Documents)
+                    const [existingFileRows] = await connection.query(
+                        "SELECT file_url FROM vendor_files WHERE vendor_id = ? AND file_type = ?",
+                        [id, type]
+                    );
+
+                    // If profile photo, also update vendors table
+                    if (type === 'profile_photo') {
+                        const upload = await s3Service.uploadFile(file, folder);
+                        
+                        // Delete old profile photo from S3 if exists
+                        if (existingVendor.profile_photo) {
+                            try {
+                                const oldKey = existingVendor.profile_photo.split(".amazonaws.com/")[1];
+                                if (oldKey) await s3Service.deleteFile(oldKey);
+                            } catch (e) { console.error("Old profile deletion failed", e); }
+                        }
+
+                        // Update Vendors table
+                        updateFields.push("profile_photo = ?");
+                        updateValues.push(upload.url);
+
+                        // Update or Insert in vendor_files table
+                        if (existingFileRows.length > 0) {
+                            await connection.query(
+                                "UPDATE vendor_files SET file_url = ? WHERE vendor_id = ? AND file_type = ?",
+                                [upload.url, id, 'profile_photo']
+                            );
+                        } else {
+                            await connection.query(
+                                "INSERT INTO vendor_files (vendor_id, file_type, file_url) VALUES (?, ?, ?)",
+                                [id, 'profile_photo', upload.url]
+                            );
+                        }
+                    } else {
+                        // Standard Document Update
+                        if (existingFileRows.length > 0) {
+                            try {
+                                const oldKey = existingFileRows[0].file_url.split(".amazonaws.com/")[1];
+                                if (oldKey) await s3Service.deleteFile(oldKey);
+                            } catch (e) { console.error("Old document deletion failed", e); }
+
+                            const upload = await s3Service.uploadFile(file, folder);
+                            await connection.query(
+                                "UPDATE vendor_files SET file_url = ? WHERE vendor_id = ? AND file_type = ?",
+                                [upload.url, id, type]
+                            );
+                        } else {
+                            const upload = await s3Service.uploadFile(file, folder);
+                            await connection.query(
+                                "INSERT INTO vendor_files (vendor_id, file_type, file_url) VALUES (?, ?, ?)",
+                                [id, type, upload.url]
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Update Vendors table
+        if (updateFields.length > 0) {
+            updateValues.push(id);
+            await connection.query(
+                `UPDATE vendors SET ${updateFields.join(", ")} WHERE id = ?`,
+                updateValues
+            );
+        }
+
+        await connection.commit();
+        connection.release();
+        return { id, message: "Vendor updated successfully" };
+
+    } catch (error) {
+        await connection.rollback();
+        connection.release();
+        throw error;
+    }
 };
 
-
 /* ===============================
-   TOGGLE STATUS
+   UPDATE STATUS
 ================================= */
 
-const toggleStatus = async (id) => {
+const updateStatus = async (id, status) => {
+    const [result] = await db.query(
+        "UPDATE vendors SET status = ? WHERE id = ?",
+        [status, id]
+    );
 
-  const [rows] = await db.query(
-    "SELECT id, status FROM vendors WHERE id = ?",
-    [id]
-  );
+    if (result.affectedRows === 0) {
+        throw new Error("Vendor not found");
+    }
 
-  if (!rows.length) return null;
-
-  const vendor = rows[0];
-
-  const newStatus =
-    vendor.status === "Active"
-      ? "Inactive"
-      : "Active";
-
-  await db.query(
-    "UPDATE vendors SET status = ? WHERE id = ?",
-    [newStatus, id]
-  );
-
-  const [updated] = await db.query(
-    "SELECT * FROM vendors WHERE id = ?",
-    [id]
-  );
-
-  return updated[0];
-
+    return { id, status };
 };
 
-
 /* ===============================
-   DELETE VENDOR
+   UPDATE KYC STATUS
 ================================= */
 
-const deleteVendor = async (id) => {
+const updateKycStatus = async (id, data, userId) => {
+    const query = `
+        UPDATE vendors 
+        SET 
+            kyc_status = ?, 
+            kyc_reject_reason = ?, 
+            kyc_verified_by = ?, 
+            kyc_verified_at = NOW() 
+        WHERE id = ?
+    `;
+    const values = [
+        data.kyc_status,
+        data.kyc_status === 'Rejected' ? data.kyc_reject_reason : null,
+        userId,
+        id
+    ];
 
-  const [rows] = await db.query(
-    "SELECT id, status FROM vendors WHERE id = ?",
-    [id]
-  );
+    const [result] = await db.query(query, values);
 
-  if (!rows.length) {
-    return { error: "Vendor not found" };
-  }
+    if (result.affectedRows === 0) {
+        throw new Error("Vendor not found");
+    }
 
-  const vendor = rows[0];
-
-  if (vendor.status === "Active") {
-    return { error: "Vendor is active. Please deactivate first." };
-  }
-
-  await db.query(
-    "DELETE FROM vendor_files WHERE vendor_id = ?",
-    [id]
-  );
-
-  await db.query(
-    "DELETE FROM vendors WHERE id = ?",
-    [id]
-  );
-
-  return { success: true };
-
+    return { id, kyc_status: data.kyc_status };
 };
 
-
-/* ===============================
-   EXPORTS
-================================= */
-
-module.exports = {
-  getVendors,
-  getVendorById,
-  createVendor,
-  updateVendor,
-  toggleStatus,
-  deleteVendor
+export default {
+    createVendor,
+    getAllVendors,
+    getVendorById,
+    updateVendor,
+    updateStatus,
+    updateKycStatus
 };

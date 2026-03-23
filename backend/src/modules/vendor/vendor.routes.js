@@ -1,75 +1,35 @@
-const express = require("express");
+import express from 'express';
+import controller from './vendor.controller.js';
+import validate from '../../middlewares/validate.js';
+import { 
+    createVendorSchema, 
+    updateVendorSchema, 
+    updateStatusSchema, 
+    updateKycStatusSchema 
+} from './vendor.validator.js';
+import upload from '../../middlewares/upload.middleware.js';
+import authMiddleware from '../../middlewares/auth.middleware.js';
+
 const router = express.Router();
 
-const controller = require("./vendor.controller");
-
-const {
-  createVendorSchema,
-  updateVendorSchema
-} = require("./vendor.validator");
-
-const upload = require("../../middlewares/upload.middleware.js");
-const validate = require("../../middlewares/validate");
-
+const vendorUpload = upload.fields([
+    { name: 'profile_photo', maxCount: 1 },
+    { name: 'aadhar_doc', maxCount: 1 },
+    { name: 'pan_doc', maxCount: 1 },
+    { name: 'license_doc', maxCount: 1 },
+    { name: 'fassi_doc', maxCount: 1 },
+    { name: 'gst_doc', maxCount: 1 }
+]);
 
 /* ===============================
-   GET VENDORS
+   VENDORS
 ================================= */
-router.get("/", controller.getVendors);
 
-
-/* ===============================
-   GET SINGLE VENDOR
-================================= */
+router.post("/", vendorUpload, validate(createVendorSchema), controller.createVendor);
+router.get("/", controller.getAllVendors);
 router.get("/:id", controller.getVendorById);
+router.put("/:id", vendorUpload, validate(updateVendorSchema), controller.updateVendor);
+router.patch("/:id/status", validate(updateStatusSchema), controller.updateStatus);
+router.patch("/:id/kyc", authMiddleware, validate(updateKycStatusSchema), controller.updateKycStatus);
 
-
-/* ===============================
-   CREATE VENDOR
-================================= */
-router.post(
-  "/",
-  upload.fields([
-    { name: "profilePhoto", maxCount: 1 },
-    { name: "aadharDoc", maxCount: 1 },
-    { name: "panDoc", maxCount: 1 },
-    { name: "licenseDoc", maxCount: 1 },
-    { name: "fassiDoc", maxCount: 1 },
-    { name: "gstDoc", maxCount: 1 }
-  ]),
-  validate(createVendorSchema),
-  controller.createVendor
-);
-
-
-/* ===============================
-   UPDATE VENDOR
-================================= */
-router.put(
-  "/:id",
-  upload.fields([
-    { name: "profilePhoto", maxCount: 1 },
-    { name: "aadharDoc", maxCount: 1 },
-    { name: "panDoc", maxCount: 1 },
-    { name: "licenseDoc", maxCount: 1 },
-    { name: "fassiDoc", maxCount: 1 },
-    { name: "gstDoc", maxCount: 1 }
-  ]),
-  validate(updateVendorSchema),
-  controller.updateVendor
-);
-
-
-/* ===============================
-   DELETE VENDOR
-================================= */
-router.delete("/:id", controller.deleteVendor);
-
-
-/* ===============================
-   TOGGLE STATUS
-================================= */
-router.patch("/:id/status", controller.toggleStatus);
-
-
-module.exports = router;
+export default router;

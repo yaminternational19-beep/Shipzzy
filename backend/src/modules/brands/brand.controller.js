@@ -1,11 +1,11 @@
-const ApiResponse = require("../../utils/apiResponse");
-const service = require("./brand.service");
+import ApiResponse from '../../utils/apiResponse.js';
+import service from './brand.service.js';
 
 /* ===============================
    CREATE BRAND
 ================================= */
 
-exports.createBrand = async (req, res) => {
+export const createBrand = async (req, res) => {
   try {
     const brand = await service.createBrand(req.body, req.file);
     return ApiResponse.success(
@@ -26,7 +26,7 @@ exports.createBrand = async (req, res) => {
    GET BRANDS
 ================================= */
 
-exports.getBrands = async (req, res) => {
+export const getBrands = async (req, res) => {
   try {
     const result = await service.getBrands(req.query);
     return ApiResponse.success(
@@ -47,7 +47,7 @@ exports.getBrands = async (req, res) => {
    UPDATE BRAND
 ================================= */
 
-exports.updateBrand = async (req, res) => {
+export const updateBrand = async (req, res) => {
   try {
     const brand = await service.updateBrand(
       req.params.id,
@@ -73,7 +73,7 @@ exports.updateBrand = async (req, res) => {
    DELETE BRAND
 ================================= */
 
-exports.deleteBrand = async (req, res) => {
+export const deleteBrand = async (req, res) => {
   try {
     const deleted = await service.deleteBrand(req.params.id);
     return ApiResponse.success(
@@ -94,7 +94,7 @@ exports.deleteBrand = async (req, res) => {
    TOGGLE BRAND STATUS
 ================================= */
 
-exports.toggleStatus = async (req, res) => {
+export const toggleStatus = async (req, res) => {
   try {
     const data = await service.toggleStatus(
       req.params.id,
@@ -112,3 +112,5 @@ exports.toggleStatus = async (req, res) => {
     );
   }
 };
+
+export default { createBrand, getBrands, updateBrand, deleteBrand, toggleStatus };

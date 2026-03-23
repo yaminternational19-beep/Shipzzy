@@ -1,15 +1,13 @@
-const {
-  PutObjectCommand,
-  DeleteObjectCommand
-} = require("@aws-sdk/client-s3");
-const path = require("path");
+import { PutObjectCommand,
+  DeleteObjectCommand } from '@aws-sdk/client-s3';
+import path from 'path';
 
-const s3 = require("../config/s3.js");
+import s3 from '../config/s3.js';
 
 const bucket = process.env.AWS_BUCKET;
 
 
-const getFileUrl = (key) => {
+export const getFileUrl = (key) => {
   return `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 };
 
@@ -33,7 +31,7 @@ const getFileUrl = (key) => {
 // };
 
 
-const uploadFile = async (file, folder) => {
+export const uploadFile = async (file, folder) => {
 
   const bucket = process.env.AWS_BUCKET;
 
@@ -61,7 +59,7 @@ const uploadFile = async (file, folder) => {
 };
 
 
-const deleteFile = async (key) => {
+export const deleteFile = async (key) => {
 
   const bucket = process.env.AWS_BUCKET;
 
@@ -78,7 +76,7 @@ const deleteFile = async (key) => {
 };
 
 
-const updateFile = async (oldKey, file, folder) => {
+export const updateFile = async (oldKey, file, folder) => {
 
   if (oldKey) {
     await deleteFile(oldKey);
@@ -87,7 +85,7 @@ const updateFile = async (oldKey, file, folder) => {
   return await uploadFile(file, folder);
 };
 
-module.exports = {
+export default {
   uploadFile,
   deleteFile,
   updateFile,
