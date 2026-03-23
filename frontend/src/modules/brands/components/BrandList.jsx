@@ -145,14 +145,14 @@ const BrandList = ({
     };
 
     return (
-        <div className="brand-table-container">
+        <>
 
             {/* ── Controls Bar ── */}
-            <div className="brand-table-controls">
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="vendor-table-controls">
+                <div className="vendor-controls-left">
 
                     {/* Search */}
-                    <div className="brand-search">
+                    <div className="vendor-search-box">
                         <Search className="search-icon" size={16} />
                         <input
                             type="text"
@@ -163,7 +163,7 @@ const BrandList = ({
                     </div>
 
                     {/* Category Filter */}
-                    <div className="input-with-icon" style={{ width: '190px' }}>
+                    <div className="vendor-filter-select vendor-w-190">
                         <Layers size={15} className="field-icon" />
                         <select
                             value={categoryFilter}
@@ -177,7 +177,7 @@ const BrandList = ({
                     </div>
 
                     {/* Sub-Category Filter */}
-                    <div className="input-with-icon" style={{ width: '190px' }}>
+                    <div className="vendor-filter-select vendor-w-190">
                         <ListTree size={15} className="field-icon" />
                         <select
                             value={subCategoryFilter}
@@ -192,7 +192,7 @@ const BrandList = ({
                     </div>
 
                     {/* Status Filter */}
-                    <div className="input-with-icon" style={{ width: '150px' }}>
+                    <div className="vendor-filter-select vendor-w-150">
                         <Filter size={15} className="field-icon" />
                         <select
                             value={statusFilter}
@@ -215,7 +215,7 @@ const BrandList = ({
 
             {/* ── Bulk Selection Bar ── */}
             {selectedRows.length > 0 && (
-                <div className="c-bulk-bar">
+                <div className="vendor-bulk-bar">
                     <span>
                         {selectedRows.length} {selectedRows.length === 1 ? 'brand' : 'brands'} selected
                     </span>
@@ -224,13 +224,13 @@ const BrandList = ({
             )}
 
             {/* ── Table ── */}
-            <table className="dashboard-table">
+            <table className="vendor-brand-table dashboard-table">
                 <thead>
                     <tr>
-                        <th style={{ width: '48px' }}>
+                        <th className="vendor-col-checkbox">
                             <div
                                 onClick={toggleSelectAll}
-                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                className="vendor-clickable-cell"
                             >
                                 {selectedRows.length === brands.length && brands.length > 0
                                     ? <CheckSquare size={17} color="var(--primary-color)" />
@@ -238,26 +238,26 @@ const BrandList = ({
                                 }
                             </div>
                         </th>
-                        <th style={{ width: '60px' }}>Logo</th>
+                        <th className="vendor-col-logo">Logo</th>
                         <th>Brand ID</th>
                         <th>Brand Name</th>
                         <th>Category</th>
                         <th>Sub Category</th>
                         <th>Description</th>
                         <th>Status</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
+                        <th className="vendor-col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {loading ? (
                         <tr>
-                            <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <td colSpan={9} className="vendor-empty-state">
                                 Loading...
                             </td>
                         </tr>
                     ) : brands.length === 0 ? (
                         <tr>
-                            <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <td colSpan={9} className="vendor-empty-state">
                                 No brands found.
                             </td>
                         </tr>
@@ -271,7 +271,7 @@ const BrandList = ({
                                 <td>
                                     <div
                                         onClick={() => toggleSelectRow(item.id)}
-                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        className="vendor-clickable-cell"
                                     >
                                         {selectedRows.includes(item.id)
                                             ? <CheckSquare size={17} color="var(--primary-color)" />
@@ -282,9 +282,9 @@ const BrandList = ({
 
                                 {/* Logo */}
                                 <td>
-                                    <div className="category-icon-box" style={{ width: '40px', height: '40px', borderRadius: '10px', overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div className="vendor-logo-box">
                                         {item.logo
-                                            ? <img src={item.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ? <img src={item.logo} alt="" className="vendor-logo-img" />
                                             : '🏷️'
                                         }
                                     </div>
@@ -297,67 +297,28 @@ const BrandList = ({
 
                                 {/* Brand Name */}
                                 <td>
-                                    <span style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontWeight: 700,
-                                        fontSize: '0.88rem',
-                                        color: '#6d28d9',
-                                        background: '#ede9fe',
-                                        padding: '3px 10px',
-                                        borderRadius: '20px',
-                                        whiteSpace: 'nowrap'
-                                    }}>
+                                    <span className="vendor-brand-badge">
                                         {item.name}
                                     </span>
                                 </td>
 
                                 {/* Category */}
                                 <td>
-                                    <span style={{
-                                        display: 'inline-block',
-                                        fontWeight: 600,
-                                        fontSize: '0.8rem',
-                                        color: '#1d4ed8',
-                                        background: '#dbeafe',
-                                        padding: '3px 10px',
-                                        borderRadius: '20px',
-                                        whiteSpace: 'nowrap'
-                                    }}>
+                                    <span className="vendor-category-badge">
                                         {item.category || getCategoryName(item.categoryId)}
                                     </span>
                                 </td>
 
                                 {/* Sub Category */}
                                 <td>
-                                    <span style={{
-                                        display: 'inline-block',
-                                        fontWeight: 600,
-                                        fontSize: '0.8rem',
-                                        color: '#0f766e',
-                                        background: '#ccfbf1',
-                                        padding: '3px 10px',
-                                        borderRadius: '20px',
-                                        whiteSpace: 'nowrap'
-                                    }}>
+                                    <span className="vendor-subcategory-badge">
                                         {item.subCategory || getSubCategoryName(item.subCategoryId) || '-'}
                                     </span>
                                 </td>
 
                                 {/* Description */}
                                 <td>
-                                    <div style={{
-                                        fontSize: '0.82rem',
-                                        color: '#64748b',
-                                        maxWidth: '200px',
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden',
-                                        lineHeight: '1.45',
-                                        wordBreak: 'break-word'
-                                    }}>
+                                    <div className="vendor-description-text">
                                         {item.description || '-'}
                                     </div>
                                 </td>
@@ -386,22 +347,22 @@ const BrandList = ({
 
             {/* ── Pagination ── */}
             {pagination && (
-                <div className="c-pagination">
-                    <span className="c-pagination-info">
+                <div className="vendor-pagination">
+                    <span className="vendor-pagination-info">
                         Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
                         {Math.min(pagination.page * pagination.limit, pagination.totalRecords)} of{' '}
                         {pagination.totalRecords} brands
                     </span>
-                    <div className="c-pagination-btns">
+                    <div className="vendor-pagination-btns">
                         <button
-                            className="c-page-btn"
+                            className="vendor-page-btn"
                             disabled={!pagination.hasPrevPage}
                             onClick={() => handlePageChange(pagination.page - 1)}
                         >
                             <ChevronLeft size={14} /> Prev
                         </button>
                         <button
-                            className="c-page-btn"
+                            className="vendor-page-btn"
                             disabled={!pagination.hasNextPage}
                             onClick={() => handlePageChange(pagination.page + 1)}
                         >
@@ -411,7 +372,7 @@ const BrandList = ({
                 </div>
             )}
 
-        </div>
+        </>
     );
 };
 

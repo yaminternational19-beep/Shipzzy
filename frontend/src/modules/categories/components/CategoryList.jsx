@@ -65,11 +65,11 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
     };
 
     return (
-        <div className="c-table-container">
+        <>
             {/* Controls Bar */}
-            <div className="c-table-controls">
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div className="c-search">
+            <div className="vendor-cat-table-controls">
+                <div className="vendor-cat-controls-left">
+                    <div className="vendor-cat-search-box">
                         <Search className="search-icon" size={16} />
                         <input
                             type="text"
@@ -79,7 +79,7 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
                         />
                     </div>
 
-                    <div className="input-with-icon" style={{ width: '160px' }}>
+                    <div className="vendor-cat-filter-select vendor-cat-w-160">
                         <Filter size={15} className="field-icon" />
                         <select value={statusFilter} onChange={handleStatusFilter}>
                             <option value="All">All Status</option>
@@ -98,59 +98,59 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
 
             {/* Bulk Selection Bar */}
             {selectedRows.length > 0 && (
-                <div className="c-bulk-bar">
+                <div className="vendor-cat-bulk-bar">
                     <span>{selectedRows.length} items selected</span>
                     <button onClick={() => setSelectedRows([])}>Clear</button>
                 </div>
             )}
 
             {/* Table */}
-            <table className="dashboard-table">
+            <table className="vendor-category-table dashboard-table">
                 <thead>
                     <tr>
-                        <th style={{ width: '40px' }}>
-                            <div onClick={toggleSelectAll} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <th className="vendor-cat-col-checkbox">
+                            <div onClick={toggleSelectAll} className="vendor-cat-clickable-cell">
                                 {selectedRows.length === categories.length && categories.length > 0
                                     ? <CheckSquare size={17} color="#6366f1" />
                                     : <Square size={17} color="#cbd5e1" />
                                 }
                             </div>
                         </th>
-                        <th style={{ width: '60px' }}>Icon</th>
-                        <th>Category ID</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th style={{ textAlign: 'center' }}>Sub-Categories</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
+                        <th className="vendor-cat-col-logo">ICON</th>
+                        <th>CATEGORY ID</th>
+                        <th>NAME</th>
+                        <th>DESCRIPTION</th>
+                        <th className="vendor-cat-subcat-count">SUB-CATEGORIES</th>
+                        <th>STATUS</th>
+                        <th className="vendor-cat-col-actions">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     {loading ? (
-                        <tr><td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>Loading...</td></tr>
+                        <tr><td colSpan={8} className="vendor-cat-empty-state">Loading...</td></tr>
                     ) : categories.length === 0 ? (
-                        <tr><td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>No data found.</td></tr>
+                        <tr><td colSpan={8} className="vendor-cat-empty-state">No data found.</td></tr>
                     ) : (
                         categories.map((cat) => (
                             <tr key={cat.id} className={selectedRows.includes(cat.id) ? 'selected-row' : ''}>
                                 <td>
-                                    <div onClick={() => toggleSelectRow(cat.id)} style={{ cursor: 'pointer' }}>
+                                    <div onClick={() => toggleSelectRow(cat.id)} className="vendor-cat-clickable-cell">
                                         {selectedRows.includes(cat.id) ? <CheckSquare size={17} color="#6366f1" /> : <Square size={17} color="#cbd5e1" />}
                                     </div>
                                 </td>
                                 <td>
-                                    <div className="category-icon-box" style={{ width: '40px', height: '40px', borderRadius: '10px', overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {cat.icon ? <img src={cat.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📁'}
+                                    <div className="vendor-cat-icon-box">
+                                        {cat.icon ? <img src={cat.icon} alt="" className="vendor-cat-icon-img" /> : '📁'}
                                     </div>
                                 </td>
                                 <td><span className="cat-id-badge">{cat.category_code || cat.id}</span></td>
-                                <td><span style={{ fontWeight: 600 }}>{cat.name}</span></td>
-                                <td style={{ maxWidth: '200px', fontSize: '0.85rem', color: '#64748b', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>
+                                <td><span className="vendor-cat-name-text">{cat.name}</span></td>
+                                <td className="vendor-cat-description-text">
                                     {cat.description || '-'}
                                 </td>
-                                <td style={{ textAlign: 'center' }}>{cat.subCategoryCount || 0}</td>
+                                <td className="vendor-cat-subcat-count">{cat.subCategoryCount || 0}</td>
                                 <td><span className={`badge ${cat.status === 'Active' ? 'success' : 'error'}`}>{cat.status}</span></td>
-                                <td style={{ display: 'flex', justifyContent: 'center' }}>
+                                <td className="vendor-cat-actions-cell">
                                     <ActionButtons
                                         onEdit={() => onEdit?.(cat)}
                                         onDelete={() => onDelete?.(cat)}
@@ -166,21 +166,21 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
 
             {/* Pagination */}
             {pagination && (
-                <div className="c-pagination">
-                    <span className="c-pagination-info">
+                <div className="vendor-cat-pagination">
+                    <span className="vendor-cat-pagination-info">
                         Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords}
                     </span>
-                    <div className="c-pagination-btns">
-                        <button className="c-page-btn" disabled={!pagination.hasPrevPage} onClick={() => handlePageChange(pagination.page - 1)}>
+                    <div className="vendor-cat-pagination-btns">
+                        <button className="vendor-cat-page-btn" disabled={!pagination.hasPrevPage} onClick={() => handlePageChange(pagination.page - 1)}>
                             <ChevronLeft size={14} /> Prev
                         </button>
-                        <button className="c-page-btn" disabled={!pagination.hasNextPage} onClick={() => handlePageChange(pagination.page + 1)}>
+                        <button className="vendor-cat-page-btn" disabled={!pagination.hasNextPage} onClick={() => handlePageChange(pagination.page + 1)}>
                             Next <ChevronRight size={14} />
                         </button>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

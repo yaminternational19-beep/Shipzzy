@@ -38,15 +38,15 @@ const BrandStats = ({ statsData }) => {
     ];
 
     return (
-        <div className="brand-stats-panel">
+        <div className="vendor-brand-stats-grid">
             {stats.map((stat, i) => (
-                <div key={i} className="stat-brand-card">
-                    <div className="stat-brand-icon" style={{ background: stat.bg, color: stat.color }}>
+                <div key={i} className="vendor-stat-card">
+                    <div className="vendor-stat-icon-box" style={{ background: stat.bg, color: stat.color }}>
                         <stat.icon size={24} />
                     </div>
-                    <div className="stat-brand-info">
+                    <div className="vendor-stat-info">
                         <p>{stat.title}</p>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <div className="vendor-stat-value-row">
                             <h3>{stat.value}</h3>
                         </div>
                         <p>{stat.subText}</p>

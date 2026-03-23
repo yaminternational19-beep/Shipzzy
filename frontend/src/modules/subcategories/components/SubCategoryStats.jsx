@@ -38,23 +38,17 @@ const SubCategoryStats = ({ statsData }) => {
     ];
 
     return (
-        <div className="subcategory-stats-panel">
+        <div className="vendor-sc-stats-grid">
             {stats.map((stat, i) => (
-                <div key={i} className="stat-sc-card">
-                    <div className="stat-sc-icon" style={{ background: `${stat.color}15`, color: stat.color }}>
+                <div key={i} className="vendor-sc-stat-card">
+                    <div className="vendor-sc-stat-icon-box" style={{ background: `${stat.color}15`, color: stat.color }}>
                         <stat.icon size={24} />
                     </div>
-                    <div className="stat-sc-info">
+                    <div className="vendor-sc-stat-info">
                         <p>{stat.title}</p>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <div className="vendor-sc-stat-value-row">
                             <h3>{stat.value}</h3>
-                            <span style={{
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                color: stat.trend.startsWith('+') ? '#10b981' : '#ef4444',
-                                display: 'flex',
-                                alignItems: 'center'
-                            }}>
+                            <span className="vendor-sc-stat-trend" style={{ color: stat.trend.startsWith('+') ? '#10b981' : '#ef4444' }}>
                                 {stat.trend}
                                 {stat.trend.startsWith('+') ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                             </span>

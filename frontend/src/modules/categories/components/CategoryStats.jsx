@@ -38,15 +38,15 @@ const CategoryStats = ({ statsData }) => {
     ];
 
     return (
-        <div className="category-stats-panel">
+        <div className="vendor-category-stats-grid">
             {stats.map((stat, i) => (
-                <div key={i} className="stat-c-card">
-                    <div className="stat-c-icon" style={{ background: `${stat.color}15`, color: stat.color }}>
+                <div key={i} className="vendor-cat-stat-card">
+                    <div className="vendor-cat-stat-icon-box" style={{ background: `${stat.color}15`, color: stat.color }}>
                         <stat.icon size={24} />
                     </div>
-                    <div className="stat-c-info">
+                    <div className="vendor-cat-stat-info">
                         <p>{stat.title}</p>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <div className="vendor-cat-stat-value-row">
                             <h3>{stat.value}</h3>
                         </div>
                         <p>{stat.subText}</p>

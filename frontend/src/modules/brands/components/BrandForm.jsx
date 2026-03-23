@@ -83,11 +83,11 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
     };
 
     return (
-        <div className="cat-modal-overlay">
-            <div className="cat-modal-card">
+        <div className="vendor-modal-overlay">
+            <div className="vendor-modal-card">
 
                 {/* Header */}
-                <div className="cat-modal-header">
+                <div className="vendor-modal-header">
                     <h3>{initialData ? 'Edit Brand' : 'Add New Brand'}</h3>
                     <button className="icon-btn-sm" onClick={onCancel}>
                         <X size={20} />
@@ -96,59 +96,57 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
 
                 {/* Body */}
                 <form onSubmit={handleSubmit}>
-                    <div className="cat-modal-body">
+                    <div className="vendor-modal-body">
 
                         {/* Category */}
-                        <div className="cat-form-group">
-                            <label>Category <span style={{ color: '#ef4444' }}>*</span></label>
+                        <div className="vendor-form-group">
+                            <label className="vendor-label">Category <span className="vendor-required-star">*</span></label>
                             <select
-                                className={`cat-input${errors.categoryId ? ' input-error' : ''}`}
+                                className={`vendor-input${errors.categoryId ? ' error' : ''}`}
                                 value={formData.categoryId}
                                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value, subCategoryId: '' })}
                             >
                                 <option value="">Select Category</option>
                                 {categories.map(cat => (
-                                    // Always use String() so the value matches string-based formData.categoryId
                                     <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                                 ))}
                             </select>
-                            {errors.categoryId && <span className="field-error">{errors.categoryId}</span>}
+                            {errors.categoryId && <span className="vendor-field-error">{errors.categoryId}</span>}
                         </div>
 
                         {/* Sub Category */}
-                        <div className="cat-form-group">
-                            <label>Sub Category</label>
+                        <div className="vendor-form-group">
+                            <label className="vendor-label">Sub Category</label>
                             <select
-                                className="cat-input"
+                                className="vendor-input"
                                 value={formData.subCategoryId}
                                 onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value })}
                                 disabled={!formData.categoryId}
                             >
                                 <option value="">Select Sub Category</option>
                                 {filteredSubCats.map(sc => (
-                                    // Always use String() so the value matches string-based formData.subCategoryId
                                     <option key={sc.id} value={String(sc.id)}>{sc.name}</option>
                                 ))}
                             </select>
                         </div>
 
                         {/* Brand Name */}
-                        <div className="cat-form-group">
-                            <label>Brand Name <span style={{ color: '#ef4444' }}>*</span></label>
+                        <div className="vendor-form-group vendor-form-group-full">
+                            <label className="vendor-label">Brand Name <span className="vendor-required-star">*</span></label>
                             <input
                                 type="text"
-                                className={`cat-input${errors.name ? ' input-error' : ''}`}
+                                className={`vendor-input${errors.name ? ' error' : ''}`}
                                 placeholder="e.g. Apple, Nike"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
-                            {errors.name && <span className="field-error">{errors.name}</span>}
+                            {errors.name && <span className="vendor-field-error">{errors.name}</span>}
                         </div>
 
                         {/* Logo Upload */}
-                        <div className="cat-form-group">
-                            <label>Brand Logo</label>
-                            <div className="cat-upload-zone">
+                        <div className="vendor-form-group vendor-form-group-full">
+                            <label className="vendor-label">Brand Logo</label>
+                            <div className="vendor-upload-zone">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -158,25 +156,25 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
                                     <img
                                         src={imagePreview}
                                         alt="Logo Preview"
-                                        className="cat-upload-preview"
+                                        className="vendor-upload-preview"
                                     />
                                 ) : (
-                                    <div className="cat-upload-icon-wrapper">
+                                    <div className="vendor-upload-icon-wrapper">
                                         <Upload size={20} color="var(--primary-color)" />
                                     </div>
                                 )}
-                                <span className="cat-upload-text">
+                                <span className="vendor-upload-text">
                                     {imagePreview ? 'Click to change logo' : 'Upload brand logo or icon'}
                                 </span>
-                                <span className="cat-upload-hint">SVG, PNG, JPG (max 2MB)</span>
+                                <span className="vendor-upload-hint">SVG, PNG, JPG (max 2MB)</span>
                             </div>
                         </div>
 
                         {/* Description */}
-                        <div className="cat-form-group">
-                            <label>Brand Description</label>
+                        <div className="vendor-form-group vendor-form-group-full">
+                            <label className="vendor-label">Brand Description</label>
                             <textarea
-                                className="cat-input"
+                                className="vendor-input"
                                 rows="2"
                                 placeholder="Brief details about the brand..."
                                 value={formData.description}
@@ -185,10 +183,10 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
                         </div>
 
                         {/* Status */}
-                        <div className="cat-form-group">
-                            <label>Status</label>
-                            <div className="cat-status-group">
-                                <label className="cat-status-option">
+                        <div className="vendor-form-group vendor-form-group-full">
+                            <label className="vendor-label">Status</label>
+                            <div className="vendor-status-group">
+                                <label className="vendor-status-option">
                                     <input
                                         type="radio"
                                         name="brandStatus"
@@ -198,7 +196,7 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
                                     />
                                     Active
                                 </label>
-                                <label className="cat-status-option">
+                                <label className="vendor-status-option">
                                     <input
                                         type="radio"
                                         name="brandStatus"
@@ -214,7 +212,7 @@ const BrandForm = ({ initialData, categories = [], subCategories = [], onCancel,
                     </div>
 
                     {/* Footer */}
-                    <div className="cat-modal-footer">
+                    <div className="vendor-modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onCancel}>
                             Cancel
                         </button>

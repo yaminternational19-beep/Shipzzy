@@ -39,11 +39,11 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
     };
 
     return (
-        <div className="cat-modal-overlay">
-            <div className="cat-modal-card">
+        <div className="vendor-sc-modal-overlay">
+            <div className="vendor-sc-modal-card">
 
                 {/* Header */}
-                <div className="cat-modal-header">
+                <div className="vendor-sc-modal-header">
                     <h3>{initialData ? 'Edit Sub Category' : 'Add New Sub Category'}</h3>
                     <button className="icon-btn-sm" onClick={onCancel}>
                         <X size={20} />
@@ -52,13 +52,13 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
 
                 {/* Body */}
                 <form onSubmit={handleSubmit}>
-                    <div className="cat-modal-body">
+                    <div className="vendor-sc-modal-body">
 
                         {/* Parent Category */}
-                        <div className="cat-form-group">
-                            <label>Parent Category</label>
+                        <div className="vendor-sc-form-group">
+                            <label className="vendor-sc-label">Parent Category</label>
                             <select
-                                className="cat-input"
+                                className="vendor-sc-input"
                                 value={formData.categoryId}
                                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                                 required
@@ -71,11 +71,11 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                         </div>
 
                         {/* Sub Category Name */}
-                        <div className="cat-form-group">
-                            <label>Sub Category Name</label>
+                        <div className="vendor-sc-form-group">
+                            <label className="vendor-sc-label">Sub Category Name</label>
                             <input
                                 type="text"
-                                className="cat-input"
+                                className="vendor-sc-input"
                                 placeholder="e.g. Mobile Phones"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -84,10 +84,9 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                         </div>
 
                         {/* Image Upload */}
-                        <div className="cat-form-group">
-                            <label>Sub Category Image</label>
-                            <div className="cat-upload-zone">
-                                {/* Full-zone clickable file input */}
+                        <div className="vendor-sc-form-group">
+                            <label className="vendor-sc-label">Sub Category Image</label>
+                            <div className="vendor-sc-upload-zone">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -97,25 +96,25 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                                     <img
                                         src={imagePreview || initialData?.icon}
                                         alt="Preview"
-                                        className="cat-upload-preview"
+                                        className="vendor-sc-upload-preview"
                                     />
                                 ) : (
-                                    <div className="cat-upload-icon-wrapper">
+                                    <div className="vendor-sc-upload-icon-wrapper">
                                         <Upload size={20} color="var(--primary-color)" />
                                     </div>
                                 )}
-                                <span className="cat-upload-text">
+                                <span className="vendor-sc-upload-text">
                                     {imagePreview ? 'Click to change image' : 'Upload sub-category image'}
                                 </span>
-                                <span className="cat-upload-hint">SVG, PNG, JPG (max 2MB)</span>
+                                <span className="vendor-sc-upload-hint">SVG, PNG, JPG (max 2MB)</span>
                             </div>
                         </div>
 
                         {/* Description / Items */}
-                        <div className="cat-form-group">
-                            <label>Items under this sub-category</label>
+                        <div className="vendor-sc-form-group">
+                            <label className="vendor-sc-label">Items under this sub-category</label>
                             <textarea
-                                className="cat-input"
+                                className="vendor-sc-input"
                                 rows="2"
                                 placeholder="e.g. iPhone, Samsung, Motorola..."
                                 value={formData.description}
@@ -124,10 +123,10 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                         </div>
 
                         {/* Status */}
-                        <div className="cat-form-group">
-                            <label>Status</label>
-                            <div className="cat-status-group">
-                                <label className="cat-status-option">
+                        <div className="vendor-sc-form-group">
+                            <label className="vendor-sc-label">Status</label>
+                            <div className="vendor-sc-status-group">
+                                <label className="vendor-sc-status-option">
                                     <input
                                         type="radio"
                                         name="scStatus"
@@ -137,7 +136,7 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                                     />
                                     Active
                                 </label>
-                                <label className="cat-status-option">
+                                <label className="vendor-sc-status-option">
                                     <input
                                         type="radio"
                                         name="scStatus"
@@ -153,7 +152,7 @@ const SubCategoryForm = ({ initialData, categories = [], onCancel, onSave }) => 
                     </div>
 
                     {/* Footer */}
-                    <div className="cat-modal-footer">
+                    <div className="vendor-sc-modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onCancel}>
                             Cancel
                         </button>

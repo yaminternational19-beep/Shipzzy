@@ -133,14 +133,14 @@ const BrandsPage = () => {
     };
 
     return (
-        <div className="brands-module">
-            <div className="brands-header">
+        <div className="vendor-brands-container">
+            <div className="vendor-brands-header">
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <h1 className="vendor-brand-title">
                         <Award size={28} color="var(--primary-color)" />
                         Brand Management
                     </h1>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
+                    <p className="vendor-brand-subtitle">
                         Manage product brands and their associated categories/sub-categories
                     </p>
                 </div>
@@ -154,7 +154,7 @@ const BrandsPage = () => {
 
             <BrandStats statsData={stats} />
 
-            <div style={{ marginTop: '24px' }}>
+            <div className="vendor-brand-table-wrapper">
                 <BrandList
                     brands={brands}
                     categories={categories}

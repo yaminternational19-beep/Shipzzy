@@ -103,11 +103,11 @@ const CategoriesPage = () => {
     };
 
     return (
-        <div className="categories-module management-module">
-            <div className="categories-header">
+        <div className="vendor-categories-container">
+            <div className="vendor-categories-header">
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', margin: 0 }}>Category Management</h1>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
+                    <h1 className="vendor-category-title">Category Management</h1>
+                    <p className="vendor-category-subtitle">
                         Organize products into hierarchical categories
                     </p>
                 </div>
@@ -121,7 +121,7 @@ const CategoriesPage = () => {
 
             <CategoryStats statsData={stats} />
 
-            <div style={{ marginTop: '24px' }}>
+            <div className="vendor-category-table-wrapper">
                 <CategoryList
                     categories={categories}
                     pagination={pagination}

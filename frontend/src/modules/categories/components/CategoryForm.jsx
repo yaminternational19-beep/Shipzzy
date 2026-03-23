@@ -50,10 +50,10 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
     };
 
     return (
-        <div className="cat-modal-overlay">
-            <div className="cat-modal-card">
+        <div className="vendor-cat-modal-overlay">
+            <div className="vendor-cat-modal-card">
                 {/* Header */}
-                <div className="cat-modal-header">
+                <div className="vendor-cat-modal-header">
                     <h3>{initialData ? 'Edit Category' : 'Add New Category'}</h3>
                     <button className="icon-btn-sm" onClick={onCancel}>
                         <X size={20} />
@@ -62,14 +62,14 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
 
                 {/* Body */}
                 <form onSubmit={handleSubmit}>
-                    <div className="cat-modal-body">
+                    <div className="vendor-cat-modal-body">
 
                         {/* Category Name */}
-                        <div className="cat-form-group">
-                            <label>Category Name</label>
+                        <div className="vendor-cat-form-group">
+                            <label className="vendor-cat-label">Category Name</label>
                             <input
                                 type="text"
-                                className="cat-input"
+                                className="vendor-cat-input"
                                 placeholder="e.g. Spices & Herbs"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -78,10 +78,10 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
                         </div>
 
                         {/* Description */}
-                        <div className="cat-form-group">
-                            <label>Description</label>
+                        <div className="vendor-cat-form-group">
+                            <label className="vendor-cat-label">Description</label>
                             <textarea
-                                className="cat-input"
+                                className="vendor-cat-input"
                                 rows="3"
                                 placeholder="Short description of the category..."
                                 value={formData.description}
@@ -90,10 +90,9 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
                         </div>
 
                         {/* Category Icon / Image Upload */}
-                        <div className="cat-form-group">
-                            <label>Category Icon / Image</label>
-                            <div className="cat-upload-zone">
-                                {/* Native file input covers the whole zone */}
+                        <div className="vendor-cat-form-group">
+                            <label className="vendor-cat-label">Category Icon / Image</label>
+                            <div className="vendor-cat-upload-zone">
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -104,25 +103,25 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
                                     <img
                                         src={imagePreview}
                                         alt="Preview"
-                                        className="cat-upload-preview"
+                                        className="vendor-cat-upload-preview"
                                     />
                                 ) : (
-                                    <div className="cat-upload-icon-wrapper">
+                                    <div className="vendor-cat-upload-icon-wrapper">
                                         <Upload size={22} color="var(--primary-color)" />
                                     </div>
                                 )}
-                                <span className="cat-upload-text">
+                                <span className="vendor-cat-upload-text">
                                     {imagePreview ? 'Click to change image' : 'Click to upload image'}
                                 </span>
-                                <span className="cat-upload-hint">SVG, PNG, JPG (max 2MB)</span>
+                                <span className="vendor-cat-upload-hint">SVG, PNG, JPG (max 2MB)</span>
                             </div>
                         </div>
 
                         {/* Status */}
-                        <div className="cat-form-group">
-                            <label>Status</label>
-                            <div className="cat-status-group">
-                                <label className="cat-status-option">
+                        <div className="vendor-cat-form-group">
+                            <label className="vendor-cat-label">Status</label>
+                            <div className="vendor-cat-status-group">
+                                <label className="vendor-cat-status-option">
                                     <input
                                         type="radio"
                                         name="catStatus"
@@ -132,7 +131,7 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
                                     />
                                     Active
                                 </label>
-                                <label className="cat-status-option">
+                                <label className="vendor-cat-status-option">
                                     <input
                                         type="radio"
                                         name="catStatus"
@@ -147,7 +146,7 @@ const CategoryForm = ({ initialData, onCancel, onSave }) => {
                     </div>
 
                     {/* Footer */}
-                    <div className="cat-modal-footer">
+                    <div className="vendor-cat-modal-footer">
                         <button type="button" className="btn btn-secondary" onClick={onCancel}>
                             Cancel
                         </button>

@@ -80,14 +80,14 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
     };
 
     return (
-        <div className="sc-table-container">
+        <>
 
             {/* ── Controls Bar ── */}
-            <div className="sc-table-controls">
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="vendor-sc-table-controls">
+                <div className="vendor-sc-controls-left">
 
                     {/* Search */}
-                    <div className="sc-search">
+                    <div className="vendor-sc-search-box">
                         <Search className="search-icon" size={16} />
                         <input
                             type="text"
@@ -98,7 +98,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                     </div>
 
                     {/* Category Filter */}
-                    <div className="input-with-icon" style={{ width: '190px' }}>
+                    <div className="vendor-sc-filter-select vendor-sc-w-190">
                         <Layers size={15} className="field-icon" />
                         <select
                             value={categoryFilter}
@@ -114,7 +114,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                     </div>
 
                     {/* Status Filter */}
-                    <div className="input-with-icon" style={{ width: '150px' }}>
+                    <div className="vendor-sc-filter-select vendor-sc-w-150">
                         <Filter size={15} className="field-icon" />
                         <select
                             value={statusFilter}
@@ -136,7 +136,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
 
             {/* ── Bulk Selection Bar ── */}
             {selectedRows.length > 0 && (
-                <div className="c-bulk-bar">
+                <div className="vendor-sc-bulk-bar">
                     <span>
                         {selectedRows.length} {selectedRows.length === 1 ? 'item' : 'items'} selected
                     </span>
@@ -145,13 +145,13 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
             )}
 
             {/* ── Table ── */}
-            <table className="dashboard-table">
+            <table className="vendor-sc-table dashboard-table">
                 <thead>
                     <tr>
-                        <th style={{ width: '48px' }}>
+                        <th className="vendor-sc-col-checkbox">
                             <div
                                 onClick={toggleSelectAll}
-                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                className="vendor-sc-clickable-cell"
                             >
                                 {selectedRows.length === subcategories.length && subcategories.length > 0
                                     ? <CheckSquare size={17} color="var(--primary-color)" />
@@ -159,20 +159,20 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                                 }
                             </div>
                         </th>
-                        <th style={{ width: '60px' }}>Icon</th>
-                        <th>Category ID</th>
-                        <th>Category Name</th>
-                        <th>Sub-Category ID</th>
-                        <th>Sub-Category Name</th>
-                        <th>Items / Products</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'center' }}>Actions</th>
+                        <th className="vendor-sc-col-logo">ICON</th>
+                        <th>CATEGORY ID</th>
+                        <th>CATEGORY NAME</th>
+                        <th>SUB-CATEGORY ID</th>
+                        <th>SUB-CATEGORY NAME</th>
+                        <th>ITEMS / PRODUCTS</th>
+                        <th>STATUS</th>
+                        <th className="vendor-sc-col-actions">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     {subcategories.length === 0 ? (
                         <tr>
-                            <td colSpan={9} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                            <td colSpan={9} className="vendor-sc-empty-state">
                                 No sub-categories found.
                             </td>
                         </tr>
@@ -186,7 +186,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                                 <td>
                                     <div
                                         onClick={() => toggleSelectRow(item.id)}
-                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        className="vendor-sc-clickable-cell"
                                     >
                                         {selectedRows.includes(item.id)
                                             ? <CheckSquare size={17} color="var(--primary-color)" />
@@ -197,9 +197,9 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
 
                                 {/* Icon */}
                                 <td>
-                                    <div className="category-icon-box" style={{ width: '40px', height: '40px', borderRadius: '10px', overflow: 'hidden', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div className="vendor-sc-icon-box">
                                         {item.icon ? (
-                                            <img src={item.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={item.icon} alt="" className="vendor-sc-icon-img" />
                                         ) : (
                                             '📁'
                                         )}
@@ -208,31 +208,31 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
 
                                 {/* Cat ID */}
                                 <td>
-                                    <span className="cat-id-badge">{item.category_code || item.categoryId || '-'}</span>
+                                    <span className="vendor-sc-id-badge">{item.category_code || item.categoryId || '-'}</span>
                                 </td>
 
                                 {/* Category Name */}
                                 <td>
-                                    <span style={{ fontWeight: 500, color: '#475569', fontSize: '0.9rem' }}>
+                                    <span className="vendor-sc-cat-name">
                                         {item.category}
                                     </span>
                                 </td>
 
                                 {/* Sub ID */}
                                 <td>
-                                    <span className="cat-id-badge">{item.subcategory_code || item.id}</span>
+                                    <span className="vendor-sc-id-badge">{item.subcategory_code || item.id}</span>
                                 </td>
 
                                 {/* Sub Category Name */}
                                 <td>
-                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                    <span className="vendor-sc-name-text">
                                         {item.name}
                                     </span>
                                 </td>
 
                                 {/* Items / Products */}
                                 <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '0.85rem' }}>
+                                    <div className="vendor-sc-desc-container">
                                         <ListTree size={14} />
                                         {item.description || '-'}
                                     </div>
@@ -246,7 +246,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                                 </td>
 
                                 {/* Actions — shared ActionButtons component */}
-                                <td>
+                                <td className="vendor-sc-actions-cell">
                                     <ActionButtons
                                         onEdit={() => onEdit?.(item)}
                                         onToggleStatus={() => onToggleStatus(item)}
@@ -262,20 +262,20 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
 
             {/* ── Pagination ── */}
             {pagination && (
-                <div className="c-pagination">
-                    <span className="c-pagination-info">
+                <div className="vendor-sc-pagination">
+                    <span className="vendor-sc-pagination-info">
                         Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} items
                     </span>
-                    <div className="c-pagination-btns">
+                    <div className="vendor-sc-pagination-btns">
                         <button
-                            className="c-page-btn"
+                            className="vendor-sc-page-btn"
                             disabled={!pagination.hasPrevPage}
                             onClick={() => handlePageChange(pagination.page - 1)}
                         >
                             <ChevronLeft size={14} /> Prev
                         </button>
                         <button
-                            className="c-page-btn"
+                            className="vendor-sc-page-btn"
                             disabled={!pagination.hasNextPage}
                             onClick={() => handlePageChange(pagination.page + 1)}
                         >
@@ -285,7 +285,7 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                 </div>
             )}
 
-        </div>
+        </>
     );
 };
 

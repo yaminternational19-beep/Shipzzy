@@ -119,14 +119,14 @@ const SubCategoriesPage = () => {
     };
 
     return (
-        <div className="subcategories-module">
-            <div className="subcategories-header">
+        <div className="vendor-subcategories-container">
+            <div className="vendor-subcategories-header">
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <h1 className="vendor-sc-title">
                         <ListTree size={28} color="var(--primary-color)" />
                         Sub Category Management
                     </h1>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
+                    <p className="vendor-sc-subtitle">
                         Manage product sub-categories and their parent categories
                     </p>
                 </div>
@@ -140,7 +140,7 @@ const SubCategoriesPage = () => {
 
             <SubCategoryStats statsData={stats} />
 
-            <div style={{ marginTop: '24px' }}>
+            <div className="vendor-sc-table-wrapper">
                 <SubCategoryList
                     subcategories={subCategories}
                     parentCategories={categories}
