@@ -71,7 +71,7 @@ const CustomerList = ({
         <div className="cust-table-section">
             {/* ── Controls Bar ── */}
             <div className="cust-table-controls">
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1 }}>
+                <div className="cust-controls-left">
                     <div className="cust-search">
                         <Search className="search-icon" size={18} />
                         <input
@@ -113,15 +113,6 @@ const CustomerList = ({
                             <option value="Inactive">Inactive</option>
                             <option value="Terminated">Terminated</option>
                         </select>
-
-                        {/* <button
-                            className="filter-clear-btn"
-                            onClick={resetFilters}
-                            title="Clear Filters"
-                            style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                        >
-                            <X size={18} />
-                        </button> */}
                     </div>
                 </div>
 
@@ -140,33 +131,33 @@ const CustomerList = ({
             )}
 
             {/* ── Table ── */}
-            <div style={{ overflowX: 'auto' }}>
+            <div className="cust-table-wrapper">
                 <table className="dashboard-table">
                     <thead>
                         <tr>
-                            <th style={{ width: '48px' }}>
-                                <div onClick={toggleSelectAll} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                                {selectedCustomerIds.length === customers.length && customers.length > 0
-                                    ? <CheckSquare size={17} color="#6366f1" />
-                                    : <Square size={17} color="#cbd5e1" />
-                                }
-                            </div>
+                            <th className="cust-col-checkbox">
+                                <div onClick={toggleSelectAll} className="cust-clickable-cell">
+                                    {selectedCustomerIds.length === customers.length && customers.length > 0
+                                        ? <CheckSquare size={17} color="var(--primary-color)" />
+                                        : <Square size={17} color="#94a3b8" />
+                                    }
+                                </div>
                             </th>
-                            <th>PROFILE</th>
+                            <th className="cust-col-profile">PROFILE</th>
                             <th>CUSTOMER ID</th>
                             <th>NAME</th>
                             <th>CONTACT</th>
                             <th>LOCATION</th>
-                            <th style={{ textAlign: 'center' }}>ORDERS</th>
+                            <th>ORDERS</th>
                             <th>JOINED</th>
                             <th>STATUS</th>
-                            <th style={{ textAlign: 'center' }}>ACTIONS</th>
+                            <th className="cust-col-actions">ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody>
                         {customers.length === 0 ? (
                             <tr>
-                                <td colSpan={10} style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
+                                <td colSpan={10} className="cust-empty-state">
                                     No customers found matching your filters.
                                 </td>
                             </tr>
@@ -174,10 +165,10 @@ const CustomerList = ({
                             customers.map((customer) => (
                                 <tr key={customer.id} className={selectedCustomerIds.includes(customer.id) ? 'selected-row' : ''}>
                                     <td>
-                                        <div onClick={() => toggleSelectRow(customer.id)} style={{ cursor: 'pointer', display: 'flex' }}>
+                                        <div onClick={() => toggleSelectRow(customer.id)} className="cust-clickable-cell">
                                             {selectedCustomerIds.includes(customer.id)
-                                                ? <div style={{ color: 'var(--primary-color)' }}>◉</div>
-                                                : <div style={{ color: '#94a3b8' }}>○</div>
+                                                ? <CheckSquare size={17} color="var(--primary-color)" />
+                                                : <Square size={17} color="#94a3b8" />
                                             }
                                         </div>
                                     </td>
@@ -187,24 +178,24 @@ const CustomerList = ({
                                         </div>
                                     </td>
                                     <td><span className="cust-id-badge">{customer.id}</span></td>
-                                    <td><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{customer.name}</span></td>
+                                    <td><span className="cust-name-text">{customer.name}</span></td>
                                     <td>
-                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{customer.email}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{customer.phone}</div>
+                                        <div className="cust-contact-primary">{customer.email}</div>
+                                        <div className="cust-contact-secondary">{customer.phone}</div>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', color: '#64748b' }}>
+                                        <div className="cust-location-box">
                                             <MapPin size={12} /> {customer.city}, {customer.country}
                                         </div>
                                     </td>
-                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{customer.totalOrders}</td>
-                                    <td style={{ fontSize: '0.85rem', color: '#64748b' }}>{customer.joined}</td>
+                                    <td className="cust-orders-count">{customer.totalOrders}</td>
+                                    <td className="cust-joined-date">{customer.joined}</td>
                                     <td>
                                         <span className={`badge ${customer.status === 'Active' ? 'success' : customer.status === 'Terminated' ? 'error' : 'warning'}`}>
                                             {customer.status}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td className="cust-actions-cell">
                                         <ActionButtons
                                             onView={() => onView(customer)}
                                             onEdit={() => onEdit(customer)}

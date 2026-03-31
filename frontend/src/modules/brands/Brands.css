@@ -187,11 +187,34 @@
 .vendor-brand-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.vendor-col-checkbox { width: 48px; }
-.vendor-col-logo { width: 60px; }
-.vendor-col-actions { text-align: center; width: 100px; }
+.vendor-brand-table th {
+    text-align: center !important;
+}
+
+.vendor-brand-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.vendor-col-checkbox { 
+    width: 60px !important; 
+    padding-left: 20px !important;
+}
+
+.vendor-col-logo { 
+    width: 80px !important; 
+}
+
+.vendor-col-actions { 
+    text-align: right !important; 
+    width: 130px !important; 
+    padding-right: 20px !important;
+}
 
 .vendor-clickable-cell {
     cursor: pointer;
@@ -297,21 +320,24 @@
 
 /* ─── Pagination ─── */
 .vendor-pagination {
-    padding: 16px 20px;
+    padding: 18px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid var(--border-color);
+    background: #fcfdfe;
 }
 
 .vendor-pagination-info {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.88rem;
+    color: #64748b;
+    font-weight: 500;
 }
 
 .vendor-pagination-btns {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
 }
 
 .vendor-page-btn {

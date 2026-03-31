@@ -64,6 +64,11 @@
     flex-shrink: 0;
 }
 
+.vendor-sc-stat-icon-box.primary { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.vendor-sc-stat-icon-box.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.vendor-sc-stat-icon-box.error { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.vendor-sc-stat-icon-box.info { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+
 .vendor-sc-stat-info p {
     margin: 0;
     font-size: 0.82rem;
@@ -84,12 +89,8 @@
     line-height: 1.2;
 }
 
-.vendor-sc-stat-trend {
-    font-size: 0.75rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-}
+.vendor-sc-stat-trend.success { color: #10b981; }
+.vendor-sc-stat-trend.error { color: #ef4444; }
 
 /* ─── Table Container & Controls ─── */
 .vendor-sc-table-wrapper {
@@ -190,25 +191,56 @@
 .vendor-sc-w-190 { width: 190px; }
 .vendor-sc-w-150 { width: 150px; }
 
-/* ─── Table Styles ─── */
+/* ─── Table Styles Refined ─── */
 .vendor-sc-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.vendor-sc-col-checkbox { width: 48px; }
-.vendor-sc-col-logo { width: 60px; }
-.vendor-sc-col-actions { text-align: center; width: 100px; }
+.vendor-sc-table th {
+    padding: 14px 16px;
+    text-align: center !important;
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+}
+
+.vendor-sc-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.vendor-sc-col-checkbox { 
+    width: 60px !important; 
+    padding-left: 20px !important;
+}
+
+.vendor-sc-col-logo { 
+    width: 80px !important; 
+}
+
+.vendor-sc-col-actions { 
+    text-align: right !important; 
+    width: 130px !important; 
+    padding-right: 20px !important;
+}
 
 .vendor-sc-clickable-cell {
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .vendor-sc-empty-state {
     text-align: center;
-    padding: 48px;
+    padding: 60px 48px;
     color: #94a3b8;
 }
 
@@ -282,16 +314,18 @@
 
 /* ─── Pagination ─── */
 .vendor-sc-pagination {
-    padding: 16px 20px;
+    padding: 18px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid var(--border-color);
+    background: #fcfdfe;
 }
 
 .vendor-sc-pagination-info {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.88rem;
+    color: #64748b;
+    font-weight: 500;
 }
 
 .vendor-sc-pagination-btns {

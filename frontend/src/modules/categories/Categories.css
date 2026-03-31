@@ -61,6 +61,11 @@
     flex-shrink: 0;
 }
 
+.vendor-cat-stat-icon-box.primary { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.vendor-cat-stat-icon-box.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.vendor-cat-stat-icon-box.error { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.vendor-cat-stat-icon-box.info { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+
 .vendor-cat-stat-info p {
     margin: 0;
     font-size: 0.82rem;
@@ -179,25 +184,56 @@
 
 .vendor-cat-w-160 { width: 160px; }
 
-/* ─── Table Styles ─── */
+/* ─── Table Styles Refined ─── */
 .vendor-category-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.vendor-cat-col-checkbox { width: 40px; }
-.vendor-cat-col-logo { width: 60px; }
-.vendor-cat-col-actions { text-align: center; width: 100px; }
+.vendor-category-table th {
+    padding: 14px 16px;
+    text-align: center !important;
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+}
+
+.vendor-category-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.vendor-cat-col-checkbox { 
+    width: 60px !important; 
+    padding-left: 20px !important;
+}
+
+.vendor-cat-col-logo { 
+    width: 80px !important; 
+}
+
+.vendor-cat-col-actions { 
+    text-align: right !important; 
+    width: 130px !important; 
+    padding-right: 20px !important;
+}
 
 .vendor-cat-clickable-cell {
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .vendor-cat-empty-state {
     text-align: center;
-    padding: 48px;
+    padding: 60px 48px;
     color: #94a3b8;
 }
 
@@ -233,8 +269,7 @@
 }
 
 .vendor-cat-subcat-count {
-    text-align: left;
-    padding-left: 20px;
+    text-align: center;
 }
 
 .vendor-cat-actions-cell {
@@ -290,16 +325,18 @@
 
 /* ─── Pagination ─── */
 .vendor-cat-pagination {
-    padding: 16px 20px;
+    padding: 18px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid var(--border-color);
+    background: #fcfdfe;
 }
 
 .vendor-cat-pagination-info {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.88rem;
+    color: #64748b;
+    font-weight: 500;
 }
 
 .vendor-cat-pagination-btns {

@@ -8,7 +8,7 @@ const CustomerStats = ({ stats }) => {
             value: stats.total,
             trend: '+5%',
             icon: Users,
-            color: '#6366f1',
+            class: 'primary',
             subText: 'Overall user base'
         },
         {
@@ -16,7 +16,7 @@ const CustomerStats = ({ stats }) => {
             value: stats.active,
             trend: '+12%',
             icon: UserCheck,
-            color: '#10b981',
+            class: 'success',
             subText: 'Verified accounts'
         },
         {
@@ -24,7 +24,7 @@ const CustomerStats = ({ stats }) => {
             value: stats.new,
             trend: '+2',
             icon: UserPlus,
-            color: '#f59e0b',
+            class: 'warning',
             subText: 'Last 7 days'
         },
         {
@@ -32,7 +32,7 @@ const CustomerStats = ({ stats }) => {
             value: stats.inactive,
             trend: '-1',
             icon: UserX,
-            color: '#ef4444',
+            class: 'error',
             subText: 'Blocked/Inactive'
         }
     ];
@@ -43,27 +43,21 @@ const CustomerStats = ({ stats }) => {
                 const Icon = card.icon;
                 return (
                     <div key={idx} className="stat-cust-card">
-                        <div className="stat-cust-icon" style={{ background: `${card.color}15`, color: card.color }}>
+                        <div className={`stat-cust-icon ${card.class}`}>
                             <Icon size={24} />
                         </div>
                         <div className="stat-cust-info">
                             <p>{card.title}</p>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                            <div className="cust-stat-value-row">
                                 <h3>{card.value}</h3>
                                 {card.trend && (
-                                    <span style={{
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        color: card.trend.startsWith('+') ? '#10b981' : '#ef4444',
-                                        display: 'flex',
-                                        alignItems: 'center'
-                                    }}>
+                                    <span className={`cust-stat-trend ${card.trend.startsWith('+') ? 'success' : 'error'}`}>
                                         {card.trend}
                                         {card.trend.startsWith('+') ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                                     </span>
                                 )}
                             </div>
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>{card.subText}</p>
+                            <p className="stat-cust-subtext">{card.subText}</p>
                         </div>
                     </div>
                 );

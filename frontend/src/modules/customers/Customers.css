@@ -62,6 +62,34 @@
     flex-shrink: 0;
 }
 
+.stat-cust-icon.primary {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+.stat-cust-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.stat-cust-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.stat-cust-icon.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.cust-stat-trend.success {
+    color: #10b981;
+}
+
+.cust-stat-trend.error {
+    color: #ef4444;
+}
+
 .stat-cust-info h3 {
     font-size: 1.6rem;
     margin: 0;
@@ -75,6 +103,18 @@
     font-size: 0.82rem;
     color: var(--text-secondary);
     margin-top: 2px;
+}
+
+.cust-stat-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.stat-cust-subtext {
+    margin: 0 !important;
+    font-size: 0.75rem !important;
+    color: #94a3b8 !important;
 }
 
 /* ─── Table Container ─── */
@@ -130,6 +170,60 @@
     transform: translateY(-50%);
     color: #94a3b8;
     pointer-events: none;
+}
+
+/* ─── Table Styles Refined ─── */
+.cust-table-section .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.cust-table-section th {
+    padding: 14px 16px;
+    text-align: center !important;
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f8fafc;
+}
+
+.cust-table-section td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.cust-col-checkbox {
+    width: 60px !important;
+    padding-left: 20px !important;
+}
+
+.cust-col-profile {
+    width: 80px !important;
+}
+
+.cust-col-actions {
+    text-align: right !important;
+    width: 140px !important;
+    padding-right: 20px !important;
+}
+
+.cust-clickable-cell {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cust-controls-left {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex: 1;
 }
 
 .cust-filters {
@@ -207,6 +301,45 @@
     font-size: 0.85rem;
     border: 2px solid #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin: 0 auto;
+}
+
+.cust-name-text {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cust-contact-primary {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.cust-contact-secondary {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.cust-location-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.cust-orders-count {
+    font-weight: 600;
+}
+
+.cust-joined-date {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.cust-actions-cell {
+    display: flex;
+    justify-content: center;
 }
 
 /* ─── Customer ID Badge ─── */

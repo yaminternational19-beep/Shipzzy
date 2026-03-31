@@ -260,7 +260,6 @@ const SubCategoryList = ({ subcategories = [], parentCategories = [], loading = 
                 </tbody>
             </table>
 
-            {/* ── Pagination ── */}
             {pagination && (
                 <div className="vendor-sc-pagination">
                     <span className="vendor-sc-pagination-info">

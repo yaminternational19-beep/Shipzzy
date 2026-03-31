@@ -119,8 +119,8 @@ const createProduct = async (data, files) => {
     const [productResult] = await connection.query(
       `INSERT INTO products 
       (vendor_id, category_id, subcategory_id, brand_id, custom_brand, name, slug, description, specification,
-       country_of_origin, manufacture_date, expiry_date, return_allowed, return_days, approval_status, is_live)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       country_of_origin, manufacture_date, expiry_date, return_allowed, return_days, approval_status, is_live, is_active, approved_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         vendor_id,
         category_id,
@@ -134,7 +134,9 @@ const createProduct = async (data, files) => {
         country_of_origin, m_date, e_date,
         return_allowed ? 1 : 0, return_days,
         approvalStatus,
-        autoApprove ? 1 : 0
+        autoApprove ? 1 : 0,
+        autoApprove ? 1 : 0,
+        autoApprove ? new Date() : null
       ]
     );
 
@@ -394,12 +396,15 @@ const updateProduct = async (productId, data, files) => {
       `UPDATE products SET 
         vendor_id=?, category_id=?, subcategory_id=?, brand_id=?, custom_brand=?, name=?, slug=?, 
         description=?, specification=?, country_of_origin=?, manufacture_date=?, expiry_date=?, 
-        return_allowed=?, return_days=?, approval_status=?, is_live=?
+        return_allowed=?, return_days=?, approval_status=?, is_live=?, is_active=?, approved_at=?
        WHERE id = ?`,
       [
         vendor_id, category_id, subcategory_id, brand_id, custom_brand, name, productSlug,
         description, JSON.stringify(specification), country_of_origin, manufacture_date, expiry_date,
-        return_allowed ? 1 : 0, return_days, approvalStatus, isLive, productId
+        return_allowed ? 1 : 0, return_days, approvalStatus, isLive, 
+        autoApprove ? 1 : 0, 
+        autoApprove ? new Date() : null,
+        productId
       ]
     );
 

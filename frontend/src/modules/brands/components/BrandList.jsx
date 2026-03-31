@@ -150,8 +150,6 @@ const BrandList = ({
             {/* ── Controls Bar ── */}
             <div className="vendor-table-controls">
                 <div className="vendor-controls-left">
-
-                    {/* Search */}
                     <div className="vendor-search-box">
                         <Search className="search-icon" size={16} />
                         <input
@@ -162,7 +160,6 @@ const BrandList = ({
                         />
                     </div>
 
-                    {/* Category Filter */}
                     <div className="vendor-filter-select vendor-w-190">
                         <Layers size={15} className="field-icon" />
                         <select
@@ -176,7 +173,6 @@ const BrandList = ({
                         </select>
                     </div>
 
-                    {/* Sub-Category Filter */}
                     <div className="vendor-filter-select vendor-w-190">
                         <ListTree size={15} className="field-icon" />
                         <select
@@ -191,7 +187,6 @@ const BrandList = ({
                         </select>
                     </div>
 
-                    {/* Status Filter */}
                     <div className="vendor-filter-select vendor-w-150">
                         <Filter size={15} className="field-icon" />
                         <select
@@ -205,7 +200,6 @@ const BrandList = ({
                     </div>
                 </div>
 
-                {/* Export */}
                 <ExportActions
                     selectedCount={selectedRows.length}
                     onExport={showToast}
@@ -228,10 +222,7 @@ const BrandList = ({
                 <thead>
                     <tr>
                         <th className="vendor-col-checkbox">
-                            <div
-                                onClick={toggleSelectAll}
-                                className="vendor-clickable-cell"
-                            >
+                            <div onClick={toggleSelectAll} className="vendor-clickable-cell">
                                 {selectedRows.length === brands.length && brands.length > 0
                                     ? <CheckSquare size={17} color="var(--primary-color)" />
                                     : <Square size={17} color="#94a3b8" />

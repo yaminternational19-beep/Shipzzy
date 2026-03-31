@@ -111,8 +111,8 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
                         <th className="vendor-cat-col-checkbox">
                             <div onClick={toggleSelectAll} className="vendor-cat-clickable-cell">
                                 {selectedRows.length === categories.length && categories.length > 0
-                                    ? <CheckSquare size={17} color="#6366f1" />
-                                    : <Square size={17} color="#cbd5e1" />
+                                    ? <CheckSquare size={17} color="var(--primary-color)" />
+                                    : <Square size={17} color="#94a3b8" />
                                 }
                             </div>
                         </th>
@@ -135,7 +135,7 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
                             <tr key={cat.id} className={selectedRows.includes(cat.id) ? 'selected-row' : ''}>
                                 <td>
                                     <div onClick={() => toggleSelectRow(cat.id)} className="vendor-cat-clickable-cell">
-                                        {selectedRows.includes(cat.id) ? <CheckSquare size={17} color="#6366f1" /> : <Square size={17} color="#cbd5e1" />}
+                                        {selectedRows.includes(cat.id) ? <CheckSquare size={17} color="var(--primary-color)" /> : <Square size={17} color="#94a3b8" />}
                                     </div>
                                 </td>
                                 <td>
@@ -164,7 +164,6 @@ const CategoryList = ({ categories = [], pagination = null, loading = false, onE
                 </tbody>
             </table>
 
-            {/* Pagination */}
             {pagination && (
                 <div className="vendor-cat-pagination">
                     <span className="vendor-cat-pagination-info">

@@ -6,33 +6,29 @@ const CategoryStats = ({ statsData }) => {
         {
             title: 'Total Categories',
             value: statsData?.total || '0',
-            trend: '+',
             icon: Layers,
-            color: '#6366f1',
+            class: 'primary',
             subText: 'Across the system'
         },
         {
             title: 'Active / Live',
             value: statsData?.active || '0',
-            trend: '+',
             icon: CheckCircle,
-            color: '#10b981',
+            class: 'success',
             subText: 'Enabled items'
         },
         {
             title: 'Inactive',
             value: statsData?.inactive || '0',
-            trend: '-',
             icon: Package,
-            color: '#ef4444',
+            class: 'error',
             subText: 'Currently disabled'
         },
         {
             title: 'Sub-Categories',
             value: statsData?.totalSubCategories || '0',
-            trend: '+',
             icon: Package,
-            color: '#06b6d4',
+            class: 'info',
             subText: 'Child categories'
         }
     ];
@@ -41,7 +37,7 @@ const CategoryStats = ({ statsData }) => {
         <div className="vendor-category-stats-grid">
             {stats.map((stat, i) => (
                 <div key={i} className="vendor-cat-stat-card">
-                    <div className="vendor-cat-stat-icon-box" style={{ background: `${stat.color}15`, color: stat.color }}>
+                    <div className={`vendor-cat-stat-icon-box ${stat.class}`}>
                         <stat.icon size={24} />
                     </div>
                     <div className="vendor-cat-stat-info">
