@@ -21,9 +21,9 @@ const isTest = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'deve
 const otpLimiter = isTest
   ? (req, res, next) => next()
   : rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 10,
-      message: 'Too many OTP requests from this IP, please try again later.',
+      windowMs: 2 * 60 * 1000,
+      max: 30,
+      message: 'Too many OTP requests from this IP, please try again in 2 minutes.',
       standardHeaders: true,
       legacyHeaders: false
     });
@@ -32,9 +32,9 @@ const otpLimiter = isTest
 const authLimiter = isTest
   ? (req, res, next) => next()
   : rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 30,
-      message: 'Too many requests from this IP, please try again later.',
+      windowMs: 2 * 60 * 1000,
+      max: 50,
+      message: 'Too many requests from this IP, please try again in 2 minutes.',
       standardHeaders: true,
       legacyHeaders: false
     });
