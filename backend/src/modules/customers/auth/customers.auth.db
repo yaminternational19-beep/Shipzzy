@@ -12,6 +12,8 @@
                 profile_image VARCHAR(255),
                 device_id VARCHAR(255),
                 player_id VARCHAR(255),
+                google_id VARCHAR(255) NULL,
+                apple_id VARCHAR(255) NULL,
                 referral_code VARCHAR(50) UNIQUE,
                 referrer_id BIGINT,
                 login_type VARCHAR(20) DEFAULT 'otp',
@@ -26,6 +28,8 @@
                 INDEX idx_referrer_id (referrer_id),
                 INDEX idx_status (status),
                 INDEX idx_created_at (created_at),
+                INDEX idx_google_id (google_id),
+                INDEX idx_apple_id (apple_id),
                 FOREIGN KEY (referrer_id) REFERENCES customers(id) ON DELETE SET NULL
             );
         `
@@ -89,11 +93,14 @@
                 expires_at DATETIME,
                 ip_address VARCHAR(50),
                 user_agent VARCHAR(255),
+                is_revoked BOOLEAN DEFAULT FALSE,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                COLUMN device_id VARCHAR(255),
+                device_id VARCHAR(255),
+                UNIQUE KEY unique_customer_device_session (customer_id, device_id),
                 INDEX idx_customer_id (customer_id),
                 INDEX idx_expires_at (expires_at),
-                INDEX idx_device_id (device_id);
+                INDEX idx_device_id (device_id),
+                INDEX idx_is_revoked (is_revoked),
                 FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
             );
         `

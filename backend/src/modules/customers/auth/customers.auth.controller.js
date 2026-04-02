@@ -1,13 +1,16 @@
 import ApiResponse from '../../../utils/apiResponse.js';
 import ApiError from '../../../utils/ApiError.js';
 import asyncHandler from '../../../utils/asyncHandler.js';
-import customersAuthService from './customers.auth.service.js';
+import service from './customers.auth.service.js';
 
-/* ===============================
-   SIGNUP - SEND OTP
-================================= */
-export const signup = asyncHandler(async (req, res) => {
+/* ═══════════════════════════════════════════════════════════════
+   POST /signup  →  Unified OTP Request (signup + login merged)
 
+   - Checks phone existence to determine purpose automatically
+   - purpose = "login"  → if customer already exists
+   - purpose = "signup" → if customer is new
+═══════════════════════════════════════════════════════════════ */
+export const requestOtp = asyncHandler(async (req, res) => {
   const {
     country_code,
     mobile,
@@ -20,30 +23,7 @@ export const signup = asyncHandler(async (req, res) => {
     referral_code
   } = req.body;
 
-  // Check if already registered
-  const existingCustomer = await customersAuthService.getCustomerByPhone(country_code, mobile);
-
-  if (existingCustomer) {
-    throw new ApiError(400, "Mobile number already registered. Please login.");
-  }
-
-  // Validate signup data + referral
-  const referrer_id = await customersAuthService.validateSignupData({
-    country_code,
-    mobile,
-    name,
-    device_id,
-    player_id,
-    referral_code
-  });
-
-  const full_phone = `${country_code}${mobile}`;
-
-  // Generate OTP
-  const otp = customersAuthService.generateOtp();
-
-  // Create signup token
-  const signupToken = customersAuthService.generateToken({
+  const { token, otp, purpose } = await service.requestOtp({
     country_code,
     mobile,
     name,
@@ -52,181 +32,144 @@ export const signup = asyncHandler(async (req, res) => {
     player_id,
     device_type,
     app_version,
-    referrer_id,
-    purpose: "signup"
+    referral_code
   });
 
-  // Store OTP
-  await customersAuthService.storeOtp(full_phone, otp, "signup", signupToken);
-
-  return ApiResponse.success(res, "OTP sent successfully", {
-    token: signupToken,
-    otp
-  });
-
+  return ApiResponse.success(
+    res,
+    purpose === "login"
+      ? "OTP sent. Welcome back!"
+      : "OTP sent. Please verify to complete signup.",
+    { token, otp, purpose }
+  );
 });
 
-
-/* ===============================
-   LOGIN - SEND OTP
-================================= */
-export const login = asyncHandler(async (req, res) => {
-
-  const { country_code, mobile, device_id, player_id } = req.body;
-
-  const customer = await customersAuthService.getCustomerByPhone(country_code, mobile);
-
-  if (!customer) {
-    throw new ApiError(400, "Mobile number not registered. Please signup.");
-  }
-
-  const full_phone = `${country_code}${mobile}`;
-
-  const otp = customersAuthService.generateOtp();
-
-  const loginToken = customersAuthService.generateToken({
-    country_code,
-    mobile,
-    device_id,
-    player_id,
-    purpose: "login"
-  });
-
-  await customersAuthService.storeOtp(full_phone, otp, "login", loginToken);
-
-  return ApiResponse.success(res, "OTP sent successfully", {
-    token: loginToken,
-    otp
-  });
-
-});
-
-/* ===============================
-   VERIFY OTP - CREATE CUSTOMER
-================================= */
+/* ═══════════════════════════════════════════════════════════════
+   POST /verify-otp  →  Verify OTP → issue tokens
+═══════════════════════════════════════════════════════════════ */
 export const verifyOtp = asyncHandler(async (req, res) => {
-
   const { token, otp } = req.body;
 
-  const decoded = customersAuthService.verifyToken(token);
+  // Validate session token
+  const decoded = service.verifyToken(token);
   if (!decoded) {
-    throw new ApiError(401, "Invalid or expired session");
+    throw new ApiError(401, "Session expired or invalid. Please request OTP again.");
   }
 
   const full_phone = `${decoded.country_code}${decoded.mobile}`;
 
-  const isOtpValid = await customersAuthService.verifyOtp(
-    full_phone,
-    otp,
-    decoded.purpose
+  // Verify OTP in DB (throws on failure)
+  await service.verifyOtp(full_phone, otp, decoded.purpose, token);
+
+  // Complete authentication → create/update customer, device, session
+  const { accessToken, refreshToken, customer } = await service.completeOtpAuth(
+    decoded,
+    token,
+    req.ip,
+    req.get("User-Agent")
   );
 
-  if (!isOtpValid) {
-    throw new ApiError(401, "Invalid OTP");
-  }
-
-  let customer = await customersAuthService.getCustomerByPhone(
-    decoded.country_code,
-    decoded.mobile
-  );
-
-  // Signup → create customer
-  if (!customer && decoded.purpose === "signup") {
-    customer = await customersAuthService.createCustomer(decoded);
-    // Store device on signup
-    await customersAuthService.storeCustomerDevice({
-      customer_id: customer.id,
-      device_id: decoded.device_id,
-      player_id: decoded.player_id,
-      device_type: decoded.device_type,
-      app_version: decoded.app_version
-    });
-  }
-
-  // Login → store device
-  if (customer && decoded.purpose === "login") {
-    await customersAuthService.storeCustomerDevice({
-      customer_id: customer.id,
-      device_id: decoded.device_id,
-      player_id: decoded.player_id
-    });
-  }
-
-  const accessToken = customersAuthService.generateAccessToken(customer);
-  const refreshToken = customersAuthService.generateRefreshToken(customer);
-
-  await customersAuthService.storeRefreshToken(customer.id, refreshToken, decoded.device_id, req.ip, req.get('User-Agent'));
-
-  return ApiResponse.success(res, "Success", {
+  return ApiResponse.success(res, "Authentication successful", {
     accessToken,
     refreshToken,
     customer
   });
-
 });
 
-
+/* ═══════════════════════════════════════════════════════════════
+   POST /resend-otp  →  Resend OTP (with cooldown + rate limit)
+═══════════════════════════════════════════════════════════════ */
 export const resendOtp = asyncHandler(async (req, res) => {
-
   const { token } = req.body;
 
-  if (!token) {
-    throw new ApiError(400, "Token is required");
-  }
-
-  const decoded = customersAuthService.verifyToken(token);
-
+  const decoded = service.verifyToken(token);
   if (!decoded) {
-    throw new ApiError(401, "Invalid or expired session");
+    throw new ApiError(401, "Session expired or invalid. Please request OTP again.");
   }
 
   const full_phone = `${decoded.country_code}${decoded.mobile}`;
 
-  const otp = await customersAuthService.resendOtp(
-    full_phone,
-    decoded.purpose
-  );
+  const otp = await service.resendOtp(full_phone, decoded.purpose, token);
 
-  return ApiResponse.success(res, "OTP resent successfully", {
-    token,
-    otp
-  });
-
+  return ApiResponse.success(res, "OTP resent successfully", { token, otp });
 });
 
-
-
+/* ═══════════════════════════════════════════════════════════════
+   POST /refresh-token  →  Rotate refresh token
+═══════════════════════════════════════════════════════════════ */
 export const refreshToken = asyncHandler(async (req, res) => {
-
   const { token } = req.body;
 
-  const result = await customersAuthService.refreshSession(token);
+  const result = await service.refreshSession(token);
 
   return ApiResponse.success(res, "Token refreshed successfully", result);
-
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   POST /logout  →  Logout (single device or all devices)
+═══════════════════════════════════════════════════════════════ */
 export const logout = asyncHandler(async (req, res) => {
-
   const { refreshToken, logoutAll } = req.body;
 
-  if (!refreshToken) {
-    throw new ApiError(400, "Refresh token required");
-  }
+  await service.logoutCustomer(refreshToken, logoutAll === true);
 
-  await customersAuthService.logoutCustomer(refreshToken, logoutAll);
-
-  return ApiResponse.success(res, "Logged out successfully");
-
+  return ApiResponse.success(
+    res,
+    logoutAll ? "Logged out from all devices" : "Logged out successfully"
+  );
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   POST /social-login  →  Google / Apple (with account linking)
+═══════════════════════════════════════════════════════════════ */
+export const socialLogin = asyncHandler(async (req, res) => {
+  const {
+    provider,
+    provider_id,
+    email,
+    name,
+    profile_image,
+    device_id,
+    player_id,
+    device_type,
+    app_version
+  } = req.body;
 
+  const customer = await service.findOrCreateSocialCustomer({
+    provider,
+    provider_id,
+    email,
+    name,
+    profile_image,
+    device_id,
+    player_id,
+    device_type,
+    app_version
+  });
+
+  const accessToken = service.generateAccessToken(customer);
+  const refreshToken = service.generateRefreshToken(customer);
+
+  await service.storeRefreshToken(
+    customer.id,
+    refreshToken,
+    device_id,
+    req.ip,
+    req.get("User-Agent")
+  );
+
+  return ApiResponse.success(res, "Login successful", {
+    accessToken,
+    refreshToken,
+    customer
+  });
+});
 
 export default {
-  signup,
-  login,
+  requestOtp,
   verifyOtp,
   resendOtp,
   refreshToken,
-  logout
+  logout,
+  socialLogin
 };

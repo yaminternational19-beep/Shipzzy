@@ -24,13 +24,14 @@ const TABLES = [
                 last_login_at DATETIME NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
+                google_id VARCHAR(100) NULL,
+                apple_id VARCHAR(100) NULL,
+                social_email VARCHAR(100) NULL,
                 UNIQUE KEY unique_email (email),
                 INDEX idx_full_phone (full_phone),
                 INDEX idx_referrer_id (referrer_id),
                 INDEX idx_status (status),
                 INDEX idx_created_at (created_at),
-
                 FOREIGN KEY (referrer_id) REFERENCES customers(id) ON DELETE SET NULL
             );
         `

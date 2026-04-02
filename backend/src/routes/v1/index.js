@@ -99,12 +99,6 @@ router.use("/admin-products", adminProductsRoutes);
 
 
 
-
-
-
-
-
-
 import customerAuthRoutes from '../../modules/customers/auth/customers.auth.routes.js';
 
 router.use("/customers", customerAuthRoutes);
