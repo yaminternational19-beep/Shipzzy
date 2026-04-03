@@ -42,6 +42,12 @@ const getCustomerById = async (id) => {
   }
 
   delete customer.referrer_id;
+
+
+  // Clean status format
+  customer.status = customer.status ? customer.status.toLowerCase() : "active";
+
+  // ===== END =====
   
   return formatCustomerDates(customer);
 };
@@ -67,15 +73,25 @@ const updateProfile = async (customerId, updateData, imageFile) => {
   if (!current) throw new ApiError(404, "Customer not found");
 
   if (updateData.email && updateData.email !== current.email) {
-    const [existing] = await db.query(
-      "SELECT id FROM customers WHERE email = ? AND id != ? AND is_deleted = FALSE LIMIT 1",
-      [updateData.email, customerId]
+    const [rows] = await db.query(
+      "SELECT google_id, apple_id FROM customers WHERE id = ?",
+      [customerId]
     );
-    if (existing.length) {
-      throw new ApiError(400, "This email address is already registered to another account.");
+
+    const customer = rows[0];
+
+    // Only OTP users must have unique email
+    if (!customer.google_id && !customer.apple_id) {
+      const [existing] = await db.query(
+        "SELECT id FROM customers WHERE email = ? AND id != ? AND is_deleted = FALSE LIMIT 1",
+        [updateData.email, customerId]
+      );
+
+      if (existing.length) {
+        throw new ApiError(400, "This email address is already registered to another account.");
+      }
     }
   }
-
   let profileImageUrl = current.profile_image;
 
   if (imageFile) {
@@ -100,6 +116,49 @@ const updateProfile = async (customerId, updateData, imageFile) => {
 
   updates.push("profile_image = ?");
   values.push(profileImageUrl);
+
+
+  // ===== ADD MOBILE LOGIC HERE =====
+    if (updateData.mobile && updateData.country_code) {
+      const [rows] = await db.query(
+        "SELECT mobile, google_id, apple_id FROM customers WHERE id = ?",
+        [customerId]
+      );
+
+      const customer = rows[0];
+
+      // If mobile already exists → do not allow change
+      if (customer.mobile) {
+        throw new ApiError(400, "Mobile number already added. You cannot change it.");
+      }
+
+      // Allow only Google/Apple users
+      if (!customer.google_id && !customer.apple_id) {
+        throw new ApiError(400, "Mobile update not allowed for this account.");
+      }
+
+      const fullPhone = `${updateData.country_code}${updateData.mobile}`;
+
+      // Check duplicate mobile
+      const [existingMobile] = await db.query(
+        "SELECT id FROM customers WHERE full_phone = ? AND id != ? LIMIT 1",
+        [fullPhone, customerId]
+      );
+
+      if (existingMobile.length) {
+        throw new ApiError(400, "This mobile number is already registered.");
+      }
+
+      updates.push("country_code = ?");
+      values.push(updateData.country_code);
+
+      updates.push("mobile = ?");
+      values.push(updateData.mobile);
+
+      updates.push("full_phone = ?");
+      values.push(fullPhone);
+    }
+    // ===== END MOBILE LOGIC =====
 
   for (const field of allowedFields) {
     if (updateData[field] !== undefined) {
@@ -312,8 +371,6 @@ const syncAddressDefaultFlag = async (customerId, addressId) => {
     await db.query("UPDATE customers_addresses SET is_default = FALSE WHERE customer_id = ?", [customerId]);
     await db.query("UPDATE customers_addresses SET is_default = TRUE WHERE id = ? AND customer_id = ?", [addressId, customerId]);
 };
-
-
 
 const formatCustomerDates = (data) => {
   if (Array.isArray(data)) {

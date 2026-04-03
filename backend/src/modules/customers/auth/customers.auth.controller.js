@@ -8,6 +8,7 @@ const requestOtp = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, "OTP sent successfully", result);
 });
 
+
 const verifyOtp = asyncHandler(async (req, res) => {
   const { token, otp } = req.body;
   const decoded = authService.verifyToken(token);

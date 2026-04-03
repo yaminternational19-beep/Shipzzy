@@ -23,6 +23,8 @@ const getCustomerByPhone = async (country_code, mobile) => {
   return formatCustomerDates(rows[0]);
 };
 
+
+
 const getCustomerById = async (id) => {
   const [rows] = await db.query("SELECT * FROM customers WHERE id = ? AND is_deleted = FALSE LIMIT 1", [id]);
   return formatCustomerDates(rows[0]);
@@ -40,16 +42,69 @@ const validateReferralCode = async (referral_code) => {
   return rows[0].id;
 };
 
-const requestOtp = async ({ country_code, mobile, name, email, device_id, player_id, device_type, app_version, referral_code }) => {
+// const requestOtp = async ({ country_code, mobile, name, email, device_id, player_id, device_type, app_version, referral_code }) => {
+//   const full_phone = `${country_code}${mobile}`;
+//   const existing = await getCustomerByPhone(country_code, mobile);
+//   if (existing && existing.status !== "active") throw new ApiError(403, `Account is ${existing.status}.`);
+//   const purpose = existing ? "login" : "signup";
+//   let referrer_id = null;
+//   if (purpose === "signup") referrer_id = await validateReferralCode(referral_code);
+//   const otp = generateOtp();
+//   const token = generateToken({ country_code, mobile, full_phone, name: name || null, email: email || null, device_id, player_id, device_type: device_type || null, app_version: app_version || null, referrer_id, purpose });
+//   await storeOtp(full_phone, otp, purpose, token);
+//   return { token, otp, purpose };
+// };
+
+const requestOtp = async ({
+  country_code,
+  mobile,
+  name,
+  email,
+  device_id,
+  player_id,
+  device_type,
+  app_version,
+  referral_code
+}) => {
   const full_phone = `${country_code}${mobile}`;
   const existing = await getCustomerByPhone(country_code, mobile);
-  if (existing && existing.status !== "active") throw new ApiError(403, `Account is ${existing.status}.`);
+
+  // If customer exists → check status
+  if (existing) {
+    if (existing.status === "suspended") {
+      throw new ApiError(403, "Your account has been suspended. Please contact support.");
+    }
+
+    if (existing.status === "terminated") {
+      throw new ApiError(403, "Your account has been terminated. Please register with a new mobile number.");
+    }
+  }
+
   const purpose = existing ? "login" : "signup";
+
   let referrer_id = null;
-  if (purpose === "signup") referrer_id = await validateReferralCode(referral_code);
+  if (purpose === "signup") {
+    referrer_id = await validateReferralCode(referral_code);
+  }
+
   const otp = generateOtp();
-  const token = generateToken({ country_code, mobile, full_phone, name: name || null, email: email || null, device_id, player_id, device_type: device_type || null, app_version: app_version || null, referrer_id, purpose });
+
+  const token = generateToken({
+    country_code,
+    mobile,
+    full_phone,
+    name: name || null,
+    email: email || null,
+    device_id,
+    player_id,
+    device_type: device_type || null,
+    app_version: app_version || null,
+    referrer_id,
+    purpose
+  });
+
   await storeOtp(full_phone, otp, purpose, token);
+
   return { token, otp, purpose };
 };
 

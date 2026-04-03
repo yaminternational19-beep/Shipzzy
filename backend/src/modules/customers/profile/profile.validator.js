@@ -5,7 +5,9 @@ const updateProfileSchema = Joi.object({
     email: Joi.string().email().trim().lowercase().optional(),
     gender: Joi.string().valid("male", "female", "other").optional(),
     profile_image: Joi.string().uri().allow(null, "").optional(),
-    default_address_id: Joi.number().integer().positive().allow(null).optional()
+    default_address_id: Joi.number().integer().positive().allow(null).optional(),
+    // country_code: Joi.string().optional(),
+    // mobile: Joi.string().min(8).max(15).optional()
 });
 
 const addAddressSchema = Joi.object({
