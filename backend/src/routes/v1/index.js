@@ -100,8 +100,10 @@ router.use("/admin-products", adminProductsRoutes);
 
 
 import customerAuthRoutes from '../../modules/customers/auth/customers.auth.routes.js';
+import customerProfileRoutes from '../../modules/customers/profile/profile.routes.js';
 
 router.use("/customers", customerAuthRoutes);
+router.use("/profile", customerProfileRoutes);
 
 
 export default router;

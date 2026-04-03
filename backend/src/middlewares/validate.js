@@ -10,7 +10,7 @@ const validate = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(body, {
     allowUnknown: true,  // don't reject extra fields (e.g. client sends "purpose")
     stripUnknown: true,  // silently remove them before they reach the controller
-    abortEarly:   true,  // stop on first error for clean messages
+    abortEarly: true,  // stop on first error for clean messages
   });
 
   if (error) {
